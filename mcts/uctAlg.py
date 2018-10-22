@@ -69,15 +69,8 @@ class UCTAlg(object):
             print(str(coord).center(20), end='')
         print()
 
-        noise = np.random.dirichlet(noise, 1)
-        p = np.asarray(p)
-        if DEBUG:
-            print('before')
-            # p = np.asarray(p)
-            prob = p * 100
-            print(list(prob))
-            print('after')
-        p = list((1 - noise_eps) * p + noise_eps * noise.flatten())     # adding dirichlet noise eps = .25
+        p = self.add_noise(noise, p)
+
         prob = [str(x * 100) for x in p]
         for pb in prob:
             print(pb.center(20), end='')
@@ -195,8 +188,20 @@ class UCTAlg(object):
                 # uct.total_reward -= reward
             uct = uct.my_parent
 
-    def add_noise(self):
-        pass
+    @staticmethod
+    def add_noise(noise, p):
+        noise = np.random.dirichlet(noise, 1)
+        p = np.asarray(p)
+        if DEBUG:
+            print('before')
+            p = np.asarray(p)
+            prob = str(p * 100)
+            for pb in prob:
+                print(pb.center(20), end='')
+            print(list(prob))
+            print('after')
+        p = list((1 - noise_eps) * p + noise_eps * noise.flatten())     # adding dirichlet noise eps = .25
+        return p
 
     def APV_equation(self, uct):
         """return Q + U"""

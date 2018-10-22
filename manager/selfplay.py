@@ -7,40 +7,35 @@ from game.board import Board
 import numpy as np
 from cnn.model import ReversiModel
 from mcts.uctAlg import UCTAlg
-
+from manager.config import features_path, label_path
 
 
 def init():
-    global bp, wp, board, black_prompt, white_prompt, data, labels, reversi_model   # use occupied to update board history
-    # global occupied
+    global bp, wp, board, black_prompt, white_prompt, features, labels, reversi_model   # use occupied to update board history
+    # json style to input
     black_prompt = '{"requests":[{"x":-1,"y":-1}],"responses":[]}'
     white_prompt = '{"requests":[],"responses":[]}'
     bp = json.loads(black_prompt)
     wp = json.loads(white_prompt)
     board = Board()
-    labels = np.reshape([], (-1, BOARD_SIZE ** 2))
-    data = np.reshape([], (-1, BOARD_SIZE ** 2 * (HISTORY_CHANNEL * 2 + 1)))
+    labels = np.reshape([], (-1, BOARD_SIZE ** 2))  # one turn has (8,8,3) -> 64 * 3
+    features = np.reshape([], (-1, BOARD_SIZE ** 2 * (HISTORY_CHANNEL * 2 + 1)))    # one turn has 64 + 1
 
     model_lock.acquire()
     try:
-        reversi_model.load_challenger_model()
-        reversi_model.model.predict(np.random.random((1, BOARD_SIZE, BOARD_SIZE, 3)))
+        reversi_model.load_challenger_model()   # every time start a new game, reload the newest model
+        reversi_model.model.predict(np.random.random((1, BOARD_SIZE, BOARD_SIZE, 3)))   # initialize the generator to accelerate the simulation
     finally:
         model_lock.release()
 
-    if DEBUG:
-        print('History info ...')
-        # print_history()
-        print()
-        print('Feature info ...')
-    calc_features(BLACK)
+    # calc_features(BLACK)    # first to calc the nn input os the starting state (black to go)
 
 
 def record_steps(color_to_play, x, y):
     """record board state in selfplay.py, which maintains a Board instance"""
     global board
-    board.disc_place(color_to_play, x, y)
-    calc_features(-color_to_play)
+    calc_features(color_to_play)    # produce input data before change state
+    board.disc_place(color_to_play, x, y)   # record steps to global board
 
 
 def record_possibilities(pi):
@@ -52,7 +47,7 @@ def record_possibilities(pi):
 
 def add_winner_and_writeIO(winner, turn):
     """1 if winner is current player which can be calculated by turn else 0 for tie or -1 for lost"""
-    global data, labels, board
+    global features, labels, board
     winner_stack = []
     # turn = labels.shape[0]
     # winner = board.judge()
@@ -67,10 +62,10 @@ def add_winner_and_writeIO(winner, turn):
         print('label shape...', labels.shape)
         print('final labels...', labels)
 
-    with open("../labels.out", "a+") as f:
+    with open(label_path, "a+") as f:
         np.savetxt(f, labels, fmt='%f')
-    with open("../features.out", "a+") as f:
-        np.savetxt(f, data, fmt='%i')     # (tup) can save the array row wise
+    with open(features_path, "a+") as f:
+        np.savetxt(f, features, fmt='%i')     # (tup) can save the array row wise
 
 
 def play(turn):
@@ -102,7 +97,7 @@ def play(turn):
 
 
 def calc_features(color_to_play):
-    global board, data
+    global board, features
     one_piece = [0 for _ in range((HISTORY_CHANNEL << 1) + 1)]
     one_feature = []
     bd = board.board
@@ -118,7 +113,7 @@ def calc_features(color_to_play):
             one_piece[-1] = 1 if color_to_play == BLACK else 0
             one_feature = np.hstack((one_feature, one_piece))
             # print(one_feature)
-    data = np.vstack((data, one_feature))
+    features = np.vstack((features, one_feature))
     # print(data.shape)
 
 
@@ -147,8 +142,6 @@ def play_games(rounds):
         print('Round %d the terminal turn:' % turn)
         board.print_board()
         winner = board.judge()
-        global data
-        data = np.delete(data, -1, 0)
         add_winner_and_writeIO(winner, turn)
         print('winner is %s' % ('Black' if winner == BLACK else ('White' if winner == WHITE else TIE)))
 
