@@ -9,6 +9,8 @@ from cnn.model import ReversiModel
 from mcts.uctAlg import UCTAlg
 from manager.config import features_path, label_path
 
+from manager.config import selfplay_monitor
+
 
 def init():
     global bp, wp, board, black_prompt, white_prompt, features, labels, reversi_model   # use occupied to update board history
@@ -87,13 +89,10 @@ def play(turn):
     dct = {'x': res[0], 'y': res[1]}
     requests_add["responses"].append(dct)
     responses_add["requests"].append(dct)
-    # black_prompt, white_prompt = json.dumps(bp), json.dumps(wp)
     if DEBUG:
         print('The subprocess responses ...', res)
         print('the possibility...', pi)
         print('%s round has played' % ('black' if color_to_play == BLACK else 'white'))
-        # print('Black prompt...', black_prompt)
-        # print('White prompt...', white_prompt)
 
 
 def calc_features(color_to_play):
@@ -133,17 +132,20 @@ def play_games(rounds):
         global board
         turn = 0
         while not board.game_over:
-            print('Round %d:' % turn)
-            board.print_board()
+            if selfplay_monitor:
+                print('Round %d:' % turn)
+                board.print_board()
             play(turn)
             turn += 1
             if DEBUG:
                 print('Is game over? ', board.game_over)
-        print('Round %d the terminal turn:' % turn)
-        board.print_board()
+        if selfplay_monitor:
+            print('Round %d the terminal turn:' % turn)
+            board.print_board()
         winner = board.judge()
         add_winner_and_writeIO(winner, turn)
-        print('winner is %s' % ('Black' if winner == BLACK else ('White' if winner == WHITE else TIE)))
+        if selfplay_monitor:
+            print('winner is %s' % ('Black' if winner == BLACK else ('White' if winner == WHITE else TIE)))
 
     global reversi_model
     # the model will not change in one battle
@@ -170,7 +172,7 @@ def main():
     # import threading
     # t = threading.Thread(target=eval)
     # t.start()
-    play_games(rounds=1)
+    play_games(rounds=5)
 
 
 if __name__ == '__main__':

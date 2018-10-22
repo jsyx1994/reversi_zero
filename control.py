@@ -3,14 +3,19 @@
 """control the parallelism"""
 from multiprocessing import Process
 
+
+def self_play_pool(pool_size=4):
+    for i in range(pool_size):
+        Process(target=sp.play_games, args=(-1,)).start()
+
+
 if __name__ == '__main__':
     # threading.Thread(target=train, args=(1,)).start()
     # Process(target=train, args=(1,)).start()
     import manager.eval as ev
     import manager.opt as op
     import manager.selfplay as sp
-
-    Process(target=sp.play_games, args=(-1,)).start()
+    self_play_pool()
     Process(target=op.train4ever, args=()).start()
     Process(target=ev.eval4ever(), args=()).start()
 

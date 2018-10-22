@@ -10,13 +10,15 @@ from cnn.model import ReversiModel
 from game.board import Board
 import shutil
 from cnn.config import model_challenger_path, model_defender_path
+from manager.config import eval_log_path
+import  datetime
 
 IDLE_TIME = 600
 
 
 hand = BLACK
 challenger_wins = 0
-
+from manager.config import selfplay_monitor
 
 def init():
     global bp, wp, board, black_prompt, white_prompt    # use occupied to update board history
@@ -81,18 +83,21 @@ def play_games(rounds):
         global board
         turn = 0
         while not board.game_over:
-            print('Round %d:' % turn)
-            board.print_board()
-            print()
+            if selfplay_monitor:
+                print('Round %d:' % turn)
+                board.print_board()
+                print()
             play(turn)
             turn += 1
             if DEBUG:
                 print('Is game over? ', board.game_over)
         global hand
-        print('Round %d the terminal turn:' % turn)
-        board.print_board()
+        if selfplay_monitor:
+            print('Round %d the terminal turn:' % turn)
+            board.print_board()
         winner = board.judge()
-        print(hand, winner)
+        if selfplay_monitor:
+            print(hand, winner)
         global challenger_wins
         if hand == winner:
             challenger_wins += 1
@@ -111,7 +116,20 @@ def play_games(rounds):
 
 
 def update_generation():
-    shutil.copy(src=model_challenger_path, )
+    model_lock.acquire()
+    try:
+        shutil.copy(src=model_challenger_path, dst=model_defender_path)
+    except Exception as e:
+        model_lock.release()
+        print('update model failed...')
+    else:
+        print('model updated')
+        ts = datetime.datetime().now()
+        with open(eval_log_path, 'a') as f:
+            f.write(str(ts) + ' model updated\n')
+            f.close()
+    finally:
+        model_lock.release()
 
 
 def eval(rounds):
@@ -142,6 +160,6 @@ def eval4ever(rounds=eval_rounds):
 
 
 if __name__ == '__main__':
-    eval()
+    eval(1)
     # if challenger_wins/N > 0.55:
     #     update_generation()

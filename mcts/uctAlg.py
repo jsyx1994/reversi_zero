@@ -12,7 +12,7 @@ from game.board import Board
 import numpy as np
 
 from mcts.config import *
-
+from manager.config import selfplay_monitor
 
 class UCTAlg(object):
     """alg implements including expand, select, simulate and backup etc."""
@@ -39,14 +39,12 @@ class UCTAlg(object):
             # start = time.time()
             # start = time.time()
         # self.root_node.my_board.print_board()
-        print('total simulate time:', self.root_node.visit_time)
+        if selfplay_monitor:
+            print('total simulate time:', self.root_node.visit_time)
         if self.mode == 'comp':
             return self.deterministical_decide()
         elif self.mode == 'stoch':
             return self.stochastical_decide()
-
-        # print(c)
-        # print('simulation use:', time.time() - start)
 
     def stochastical_decide(self):
         """choose the action according to the distribution of prob of visiting times and this is for self play to encourage exploration"""
@@ -66,16 +64,19 @@ class UCTAlg(object):
             pi[x][y] = (c.visit_time / sum_all)
             noise.append(c.visit_time)
             p.append(pi[x][y])
-            print(str(coord).center(20), end='')
-        print()
+            if selfplay_monitor:
+                print(str(coord).center(20), end='')
+        if selfplay_monitor:
+            print()
 
         p = self.add_noise(noise, p)
 
         prob = [str(x * 100) for x in p]
-        for pb in prob:
-            print(pb.center(20), end='')
-        print()
-        print(cut_line)
+        if selfplay_monitor:
+            for pb in prob:
+                print(pb.center(20), end='')
+            print()
+            print(cut_line)
         selected_index = np.random.choice(a=a, p=p)
         action = children[selected_index].parent_action
         return action, list(pi.flatten())
@@ -118,13 +119,13 @@ class UCTAlg(object):
         """while the selection encounter a leaf node, expand its children and choose the best child of this node"""
         state = uct.my_board
         if state.game_over:
-            # print('game over')
             self.backup(uct, 1, state.side_color)
         feature_input = self.calc_features(state)
         prediction = self.reversi_model.predict(feature_input.reshape(-1, BOARD_SIZE, BOARD_SIZE, 3))
         p = prediction[0].reshape(8, 8)
         v = prediction[1].reshape(1)
-        self.backup(uct, v[0], state.side_color)  # 使用多*程？
+
+        self.backup(uct, v[0], state.side_color)
         moves = state.generate_moves(uct.state.side_color)
         children = uct.my_children
         if not moves:
@@ -190,12 +191,15 @@ class UCTAlg(object):
 
     @staticmethod
     def add_noise(noise, p):
+        """add dirichlet noise"""
+        noise = np.asarray(noise, dtype=np.float64)
+        noise += epsilon
         noise = np.random.dirichlet(noise, 1)
         p = np.asarray(p)
         if DEBUG:
             print('before')
             p = np.asarray(p)
-            prob = str(p * 100)
+            prob = str(p * 100)  # convert to percentage
             for pb in prob:
                 print(pb.center(20), end='')
             print(list(prob))

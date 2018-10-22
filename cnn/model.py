@@ -7,7 +7,7 @@ from keras.layers import Conv2D, Dense, BatchNormalization, Flatten, Input, Acti
 from keras import Model
 from keras.initializers import TruncatedNormal
 from keras.regularizers import l2
-from keras.losses import mean_squared_error
+from keras.losses import mean_squared_error, categorical_crossentropy
 from keras.optimizers import SGD
 from keras.models import save_model, load_model
 from keras.callbacks import TensorBoard
@@ -176,6 +176,7 @@ class ReversiModel(object):
         self.model = load_model(C.model_defender_path,
                                 custom_objects={'loss_for_policy': loss_for_policy, 'loss_for_value': loss_for_value})
 
+
 def load_data_set():
     data = np.loadtxt(C.features_path)
     target = np.loadtxt(C.labels_path)
@@ -186,7 +187,7 @@ def load_data_set():
 
 
 def loss_for_policy(y_true, y_pred):
-    return K.sum(-y_true * K.log(y_pred + K.epsilon()), axis=1)
+    return categorical_crossentropy(y_true, y_pred)
 
 
 def loss_for_value(y_true, y_pred):
@@ -209,7 +210,7 @@ def test1():
     # print('winner', z.shape)
     # model.model.fit(x=x, y=[y, z], batch_size=C.batch_size, epochs=100, shuffle=True)
     # model.save_challenger_model()
-    a = model.model.predict(x[0].reshape(-1, 8, 8, 3))
+    a = model.model.predict(x[0].reshape(-1, 8, 8, 3))[0].reshape(8,8)
     print(a)
 
 
@@ -222,4 +223,5 @@ def test3():
 
 
 if __name__ == '__main__':
+    # test1()
     ReversiModel().rebuild_model()
