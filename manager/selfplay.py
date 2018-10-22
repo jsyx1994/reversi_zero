@@ -177,7 +177,7 @@ def main():
     # import threading
     # t = threading.Thread(target=eval)
     # t.start()
-    play_games(rounds=100)
+    play_games(rounds=1)
 
 
 if __name__ == '__main__':

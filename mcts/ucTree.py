@@ -5,6 +5,7 @@
 import copy
 import random
 
+
 class UCT(object):
     """Tree definition but not including expand, select, simulate and backup"""
     def __init__(self):
@@ -18,7 +19,7 @@ class UCT(object):
         # UCT characters
         self.visit_time = 0     # the times a node is visited throughout the whole process
         self.total_reward = 0   # how many times winning throughout whole process
-        self.psa = 0
+        self.psa = 0    # prior experience
 
     # common operations of tree
     def initialize_state(self, state):
@@ -43,18 +44,10 @@ class UCT(object):
     @property
     def my_parent(self):
         return self.parent
-        # if self.parent is not None:
-        #     return self.parent
-        # else:
-        #     pass    # This the root node
 
     @property
     def my_board(self):
         return self.state
-        # if self.state is not None:
-        #     return self.state
-        # else:
-        #     pass    # print("Not assigned a state")
 
     @property
     def my_children(self):

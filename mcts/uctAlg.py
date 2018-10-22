@@ -5,19 +5,18 @@
 import copy
 import random
 import math
-import time
 from game.common import *
 from game.smart_random import SmartRandom
 from mcts.ucTree import UCT
 from game.board import Board
 import numpy as np
 
-C = 2
-TIME_LIMIT = .1
+from mcts.config import *
 
 
 class UCTAlg(object):
     """alg implements including expand, select, simulate and backup etc."""
+
     def __init__(self, predict_model, json=None, mode='comp'):
         """init the root node, configure the IO"""
         self.root_node = UCT()
@@ -46,10 +45,11 @@ class UCTAlg(object):
         elif self.mode == 'stoch':
             return self.stochastical_decide()
 
-
         # print(c)
         # print('simulation use:', time.time() - start)
+
     def stochastical_decide(self):
+        """choose the action according to the distribution of prob of visiting times and this is for self play to encourage exploration"""
         pi = np.zeros(shape=(BOARD_SIZE, BOARD_SIZE))
         children = self.root_node.my_children
         sum_all = self.root_node.visit_time - 1
@@ -58,29 +58,43 @@ class UCTAlg(object):
             return (-1, -1), list(pi.flatten())
         a = [x for x in range(len(children))]
         p = []
+        noise = []
 
-        print(end='       ')
         for c in children:
             coord = c.parent_action
             x, y = coord[0], coord[1]
-            pi[x][y] = (c.visit_time/sum_all)
-            # a.append(coord)
+            pi[x][y] = (c.visit_time / sum_all)
+            noise.append(c.visit_time)
             p.append(pi[x][y])
-            print(coord, end='             ')
+            print(str(coord).center(20), end='')
         print()
-        prob = [x * 100 for x in p]
-        print(prob)
+
+        noise = np.random.dirichlet(noise, 1)
+        p = np.asarray(p)
+        if DEBUG:
+            print('before')
+            # p = np.asarray(p)
+            prob = p * 100
+            print(list(prob))
+            print('after')
+        p = list((1 - noise_eps) * p + noise_eps * noise.flatten())     # adding dirichlet noise eps = .25
+        prob = [str(x * 100) for x in p]
+        for pb in prob:
+            print(pb.center(20), end='')
+        print()
         print(cut_line)
         selected_index = np.random.choice(a=a, p=p)
         action = children[selected_index].parent_action
         return action, list(pi.flatten())
 
     def deterministical_decide(self):
+        """choose the actions from the root according to the maximum visiting times"""
         pi = np.zeros(shape=(BOARD_SIZE, BOARD_SIZE))
         children = self.root_node.my_children
         best = children[0]
         sum_all = self.root_node.visit_time - 1
-        if (best.parent_action is None) or (sum_all == 0):  # according to the alg, 'no action' always have a node, and this is a fake child
+        if (best.parent_action is None) or (
+                sum_all == 0):  # according to the alg, 'no action' always have a node, and this is a fake child
             # print('(-1, -1)')
             # print(list(pi.flatten()))
             return (-1, -1), list(pi.flatten())
@@ -88,7 +102,7 @@ class UCTAlg(object):
             coord = c.parent_action
             x = coord[0]
             y = coord[1]
-            pi[x][y] = (c.visit_time/sum_all)
+            pi[x][y] = (c.visit_time / sum_all)
             if c.visit_time > best.visit_time:
                 best = c
 
@@ -101,8 +115,8 @@ class UCTAlg(object):
         self.working_node = node
 
     def select(self, working_node):
-        while working_node.my_children:    # while has child
-            working_node = self.choose_best_child(uct=working_node)     # select until has no child
+        while working_node.my_children:  # while has child
+            working_node = self.choose_best_child(uct=working_node)  # select until has no child
         # start = time.time()
         self.expand(working_node)
         # print('expand use:', time.time() - start)
@@ -117,18 +131,18 @@ class UCTAlg(object):
         prediction = self.reversi_model.predict(feature_input.reshape(-1, BOARD_SIZE, BOARD_SIZE, 3))
         p = prediction[0].reshape(8, 8)
         v = prediction[1].reshape(1)
-        self.backup(uct, v[0], state.side_color)    # 使用多*程？
+        self.backup(uct, v[0], state.side_color)  # 使用多*程？
         moves = state.generate_moves(uct.state.side_color)
         children = uct.my_children
         if not moves:
-            node = UCT()    # if it has no move to go, then create a fake node which just change the color
-            node.initialize_state(uct.state)    # also copy the board history and occupied discs
+            node = UCT()  # if it has no move to go, then create a fake node which just change the color
+            node.initialize_state(uct.state)  # also copy the board history and occupied discs
             state = node.state
             state.turn_color()
             node.parent_action = None
             node.parent = uct
 
-            node.psa = 1    # pass for sure
+            node.psa = 1  # pass for sure
             children.append(node)
         else:
             for move in moves:
@@ -146,7 +160,7 @@ class UCTAlg(object):
         # return self.choose_best_child(uct=uct)
 
     def simulate(self, uct):
-        simu_board = copy.deepcopy(uct.my_board)    # not time-consuming
+        simu_board = copy.deepcopy(uct.my_board)  # not time-consuming
         while not simu_board.game_over:
             action = SmartRandom.smart_random(simu_board)
             if action:
@@ -185,6 +199,7 @@ class UCTAlg(object):
         pass
 
     def APV_equation(self, uct):
+        """return Q + U"""
         q_v_ = uct.total_reward
         nsa = uct.visit_time
         sigma_nsb = uct.my_parent.visit_time - 1
@@ -193,7 +208,7 @@ class UCTAlg(object):
             return float('inf')
         if uct is self.root_node:
             pass
-        equation = q_v_/nsa + C * psa * math.sqrt(sigma_nsb) / (nsa + 1)
+        equation = q_v_ / nsa + Cpuct * psa * math.sqrt(sigma_nsb) / (nsa + 1)
         return equation
 
     def get_weight(self, uct):
