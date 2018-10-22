@@ -176,7 +176,6 @@ class ReversiModel(object):
         self.model = load_model(C.model_defender_path,
                                 custom_objects={'loss_for_policy': loss_for_policy, 'loss_for_value': loss_for_value})
 
-
 def load_data_set():
     data = np.loadtxt(C.features_path)
     target = np.loadtxt(C.labels_path)
@@ -194,7 +193,7 @@ def loss_for_value(y_true, y_pred):
     return mean_squared_error(y_true, y_pred)
 
 
-def train(epochs, batch_size=C.batch_size, shuffle=True):
+def train(epochs, batch_size=256, shuffle=True):
     x, y, z = load_data_set()
     model = load_model(C.model_challenger_path,
                        custom_objects={'loss_for_policy': loss_for_policy, 'loss_for_value': loss_for_value})
@@ -219,7 +218,7 @@ def test3():
     model = load_model('../models/challenger.h5',
                        custom_objects={'loss_for_policy': loss_for_policy, 'loss_for_value': loss_for_value})
     tb_callback = TensorBoard(log_dir='../log/', histogram_freq=0, write_graph=True, write_images=True)
-    model.fit(x=x, y=[y, z], batch_size=C.batch_size, epochs=10, shuffle=True, callbacks=[tb_callback], initial_epoch=0)
+    model.fit(x=x, y=[y, z], batch_size=256, epochs=10, shuffle=True, callbacks=[tb_callback], initial_epoch=0)
 
 
 if __name__ == '__main__':

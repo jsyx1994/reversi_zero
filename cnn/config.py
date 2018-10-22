@@ -1,7 +1,6 @@
 from conf import root_dir
 
 # Train
-batch_size = 256
 use_tensorboard = True
 ln_rate = 1e-2
 ln_momentum = .9

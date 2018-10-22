@@ -4,18 +4,18 @@ import json
 import numpy as np
 
 from game.common import *
+from manager.config import eval_rounds
 from mcts.uctAlg import UCTAlg
 from cnn.model import ReversiModel
 from game.board import Board
 import shutil
-
+from cnn.config import model_challenger_path, model_defender_path
 
 IDLE_TIME = 600
 
 
 hand = BLACK
 challenger_wins = 0
-
 
 
 def init():
@@ -111,10 +111,10 @@ def play_games(rounds):
 
 
 def update_generation():
-    shutil.copy('../models/challenger.h5', '../models/defender.h5')
+    shutil.copy(src=model_challenger_path, )
 
 
-def eval(rounds=20):
+def eval(rounds):
     model_lock.acquire()
     global challenger_model, defender_model
     try:
@@ -134,6 +134,11 @@ def eval(rounds=20):
         print('challenger winning rate:', challenger_wins/N)
 
     print('Have a {} seconds rest...'.format(IDLE_TIME))
+
+
+def eval4ever(rounds=eval_rounds):
+    while 1:
+        eval(rounds=rounds)
 
 
 if __name__ == '__main__':

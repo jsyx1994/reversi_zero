@@ -9,9 +9,6 @@ from cnn.model import ReversiModel
 from mcts.uctAlg import UCTAlg
 
 
-# the model will not change in one battle
-reversi_model = ReversiModel()
-
 
 def init():
     global bp, wp, board, black_prompt, white_prompt, data, labels, reversi_model   # use occupied to update board history
@@ -155,6 +152,9 @@ def play_games(rounds):
         add_winner_and_writeIO(winner, turn)
         print('winner is %s' % ('Black' if winner == BLACK else ('White' if winner == WHITE else TIE)))
 
+    global reversi_model
+    # the model will not change in one battle
+    reversi_model = ReversiModel()
 
     if rounds < -1:
         print('please select correct rounds to begin')
