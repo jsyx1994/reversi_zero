@@ -11,13 +11,13 @@ from game.board import Board
 import shutil
 from cnn.config import model_challenger_path, model_defender_path
 from manager.config import eval_log_path
-import  datetime
+import datetime
 
 IDLE_TIME = 600
 
 
 hand = BLACK
-challenger_wins = 0
+
 from manager.config import selfplay_monitor
 
 def init():
@@ -133,6 +133,8 @@ def update_generation():
 
 
 def eval(rounds):
+    global challenger_wins
+    challenger_wins = 0
     model_lock.acquire()
     global challenger_model, defender_model
     try:
@@ -149,14 +151,17 @@ def eval(rounds):
         N = rounds
         print('Evaluate starts, rounds = ', N)
         play_games(N)
+        challenger_winning_rate = challenger_wins/N
+        if challenger_winning_rate > .55:
+            update_generation()
         print('challenger winning rate:', challenger_wins/N)
-
-    print('Have a {} seconds rest...'.format(IDLE_TIME))
 
 
 def eval4ever(rounds=eval_rounds):
     while 1:
         eval(rounds=rounds)
+        print('Have a {} seconds rest...'.format(IDLE_TIME))
+        time.sleep(IDLE_TIME)
 
 
 if __name__ == '__main__':

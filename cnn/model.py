@@ -2,7 +2,6 @@
 # !/usr/bin/env python3
 import numpy as np
 
-import keras.backend as K
 from keras.layers import Conv2D, Dense, BatchNormalization, Flatten, Input, Activation, Add
 from keras import Model
 from keras.initializers import TruncatedNormal
