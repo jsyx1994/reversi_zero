@@ -2,6 +2,7 @@
 # !/usr/bin/env python3
 import numpy as np
 
+import keras.backend as K
 from keras.layers import Conv2D, Dense, BatchNormalization, Flatten, Input, Activation, Add
 from keras import Model
 from keras.initializers import TruncatedNormal
@@ -26,6 +27,9 @@ class ReversiModel(object):
                 self.load_defender_model()
         except Exception as e:
             print(e)
+
+    def __del__(self):
+        K.clear_session()
 
     def remove_model(self):
         try:
@@ -224,3 +228,16 @@ def test3():
 if __name__ == '__main__':
     # test1()
     ReversiModel().rebuild_model()
+
+    # from pympler import summary, muppy
+    # all_objects = muppy.get_objects()
+    # sum1 = summary.summarize(all_objects)
+    # summary.print_(sum1)
+    # import objgraph
+    # ReversiModel()
+    # # objgraph.show_backrefs(a, max_depth=10, filename="direct.dot")
+    # all_objects = muppy.get_objects()
+    # sum1 = summary.summarize(all_objects)
+    # summary.print_(sum1)
+
+

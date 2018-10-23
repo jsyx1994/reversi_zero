@@ -15,9 +15,9 @@ if __name__ == '__main__':
     import manager.eval as ev
     import manager.opt as op
     import manager.selfplay as sp
-    self_play_pool()
-    Process(target=op.train4ever, args=()).start()
-    Process(target=ev.eval4ever, args=()).start()
+    self_play_pool(1)
+    # Process(target=op.train4ever, args=()).start()
+    # Process(target=ev.eval4ever, args=()).start()
 
     # time.sleep(5)
     # model_lock.acquire()

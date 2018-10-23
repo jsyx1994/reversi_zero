@@ -13,22 +13,27 @@ import numpy as np
 
 from mcts.config import *
 from manager.config import selfplay_monitor
+import time
 
 class UCTAlg(object):
     """alg implements including expand, select, simulate and backup etc."""
 
     def __init__(self, predict_model, json=None, mode='comp'):
+        pass
         """init the root node, configure the IO"""
-        self.root_node = UCT()
-        self.root_node.state = Board()
-        self.mode = mode
+        uct = UCT()
+        uct.state = Board()
+
         if json is None:
             json_input = input()
-            self.root_node.state.restore_position_from_json_string(json_input=json_input)
+            uct.state.restore_position_from_json_string(json_input=json_input)
         else:
-            self.root_node.state.restore_position_from_json(json)
+            uct.state.restore_position_from_json(json)
+        self.root_node = uct
+        self.mode = mode
         self.working_node = self.root_node
         self.reversi_model = predict_model.model
+
 
     def run(self):
         start = time.time()
@@ -46,63 +51,7 @@ class UCTAlg(object):
         elif self.mode == 'stoch':
             return self.stochastical_decide()
 
-    def stochastical_decide(self):
-        """choose the action according to the distribution of prob of visiting times and this is for self play to encourage exploration"""
-        pi = np.zeros(shape=(BOARD_SIZE, BOARD_SIZE))
-        children = self.root_node.my_children
-        sum_all = self.root_node.visit_time - 1
 
-        if (children[0].parent_action is None) or (sum_all == 0):
-            return (-1, -1), list(pi.flatten())
-        a = [x for x in range(len(children))]
-        p = []
-        noise = []
-
-        for c in children:
-            coord = c.parent_action
-            x, y = coord[0], coord[1]
-            pi[x][y] = (c.visit_time / sum_all)
-            noise.append(c.visit_time)
-            p.append(pi[x][y])
-            if selfplay_monitor:
-                print(str(coord).center(20), end='')
-        if selfplay_monitor:
-            print()
-
-        p = self.add_noise(noise, p)
-
-        prob = [str(x * 100) for x in p]
-        if selfplay_monitor:
-            for pb in prob:
-                print(pb.center(20), end='')
-            print()
-            print(cut_line)
-        selected_index = np.random.choice(a=a, p=p)
-        action = children[selected_index].parent_action
-        return action, list(pi.flatten())
-
-    def deterministical_decide(self):
-        """choose the actions from the root according to the maximum visiting times"""
-        pi = np.zeros(shape=(BOARD_SIZE, BOARD_SIZE))
-        children = self.root_node.my_children
-        best = children[0]
-        sum_all = self.root_node.visit_time - 1
-        if (best.parent_action is None) or (
-                sum_all == 0):  # according to the alg, 'no action' always have a node, and this is a fake child
-            # print('(-1, -1)')
-            # print(list(pi.flatten()))
-            return (-1, -1), list(pi.flatten())
-        for c in children:
-            coord = c.parent_action
-            x = coord[0]
-            y = coord[1]
-            pi[x][y] = (c.visit_time / sum_all)
-            if c.visit_time > best.visit_time:
-                best = c
-
-        return best.parent_action, list(pi.flatten())
-        # print(best.parent_action)
-        # print(list(pi.flatten()))
 
     def set_working_node(self, node):
         """be flexible to adapt to different situations, aka. may asyc"""
@@ -189,6 +138,64 @@ class UCTAlg(object):
                 # uct.total_reward -= reward
             uct = uct.my_parent
 
+    def stochastical_decide(self):
+        """choose the action according to the distribution of prob of visiting times and this is for self play to encourage exploration"""
+        pi = np.zeros(shape=(BOARD_SIZE, BOARD_SIZE))
+        children = self.root_node.my_children
+        sum_all = self.root_node.visit_time - 1
+
+        if (children[0].parent_action is None) or (sum_all == 0):
+            return (-1, -1), list(pi.flatten())
+        a = [x for x in range(len(children))]
+        p = []
+        noise = []
+
+        for c in children:
+            coord = c.parent_action
+            x, y = coord[0], coord[1]
+            pi[x][y] = (c.visit_time / sum_all)
+            noise.append(c.visit_time)
+            p.append(pi[x][y])
+            if selfplay_monitor:
+                print(str(coord).center(20), end='')
+        if selfplay_monitor:
+            print()
+
+        p = self.add_noise(noise, p)
+
+        prob = [str(x * 100) for x in p]
+        if selfplay_monitor:
+            for pb in prob:
+                print(pb.center(20), end='')
+            print()
+            print(cut_line)
+        selected_index = np.random.choice(a=a, p=p)
+        action = children[selected_index].parent_action
+        return action, list(pi.flatten())
+
+    def deterministical_decide(self):
+        """choose the actions from the root according to the maximum visiting times"""
+        pi = np.zeros(shape=(BOARD_SIZE, BOARD_SIZE))
+        children = self.root_node.my_children
+        best = children[0]
+        sum_all = self.root_node.visit_time - 1
+        if (best.parent_action is None) or (
+                sum_all == 0):  # according to the alg, 'no action' always have a node, and this is a fake child
+            # print('(-1, -1)')
+            # print(list(pi.flatten()))
+            return (-1, -1), list(pi.flatten())
+        for c in children:
+            coord = c.parent_action
+            x = coord[0]
+            y = coord[1]
+            pi[x][y] = (c.visit_time / sum_all)
+            if c.visit_time > best.visit_time:
+                best = c
+
+        return best.parent_action, list(pi.flatten())
+        # print(best.parent_action)
+        # print(list(pi.flatten()))
+
     @staticmethod
     def add_noise(noise, p):
         """add dirichlet noise"""
@@ -251,3 +258,31 @@ class UCTAlg(object):
                 one_piece[-1] = 1 if s.side_color == BLACK else 0
                 one_feature = np.hstack((one_feature, one_piece))
         return one_feature
+
+
+if __name__ == '__main__':
+    from cnn.model import ReversiModel
+
+    from pympler import summary, muppy
+    import sys
+    import objgraph
+    all_objects = muppy.get_objects()
+    sum1 = summary.summarize(all_objects)
+    summary.print_(sum1)
+    reversi_model = ReversiModel()
+    reversi_model.model.predict(np.random.random((1, 8, 8, 3)))
+    del reversi_model
+    # UCTAlg(reversi_model)
+
+    # objgraph.show_backrefs(reversi_model, max_depth=5, filename="direct.dot")
+
+    all_objects = muppy.get_objects()
+    sum1 = summary.summarize(all_objects)
+    summary.print_(sum1)
+
+    UCTAlg(reversi_model)
+
+    # del reversi_model
+    # all_objects = muppy.get_objects()
+    # sum1 = summary.summarize(all_objects)
+    # summary.print_(sum1)

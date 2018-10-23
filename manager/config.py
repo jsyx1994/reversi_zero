@@ -17,4 +17,4 @@ opt_data_threshold = 5000
 
 # slefplay
 
-selfplay_monitor = False
+selfplay_monitor = True
