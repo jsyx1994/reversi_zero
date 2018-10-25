@@ -8,6 +8,8 @@ from cnn.model import load_data_set, ReversiModel
 import numpy as np
 import cnn.config as C
 import time
+from keras.callbacks import TensorBoard
+import pickle
 
 def limit_history_data():
     data_lock.acquire()
@@ -35,6 +37,7 @@ def limit_history_data():
     finally:
         data_lock.release()
 
+
 def train(epochs, batch_size=batch_size, shuffle=True):
     limit_history_data()
     x, y, z = load_data_set()
@@ -50,7 +53,20 @@ def train(epochs, batch_size=batch_size, shuffle=True):
             print(e)
         else:   # not error then fit
             model_lock.release()
-            model.fit(x=x, y=[y, z], batch_size=batch_size, epochs=epochs, shuffle=shuffle)
+            try:
+                with open(epochpickle_path, 'rb') as handle:
+                    initial_epoch = pickle.load(handle)
+            except FileNotFoundError:
+                initial_epoch = 0
+            # print(initial_epoch)
+            end_epoch = epochs + initial_epoch
+            tbCallBack = TensorBoard(log_dir=tensorboard_path, histogram_freq=0, write_graph=True, write_images=True)
+
+            model.fit(x=x, y=[y, z], batch_size=batch_size, initial_epoch=initial_epoch, epochs=end_epoch, shuffle=shuffle, callbacks=[tbCallBack])
+
+            with open(epochpickle_path, 'wb+') as handle:
+                pickle.dump(end_epoch, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
             model_lock.acquire()
             try:
                 reversi_model.save_challenger_model()
@@ -64,12 +80,13 @@ def train(epochs, batch_size=batch_size, shuffle=True):
 
 
 def train4ever(epochs=opt_epochs, batch_size=batch_size, shuffle=True):
+
     while 1:
         try:
             train(
                 epochs=epochs,
                 batch_size=batch_size,
-                shuffle=shuffle
+                shuffle=shuffle,
             )
         except Exception as e:
             log_lock.acquire()
@@ -86,6 +103,6 @@ def train4ever(epochs=opt_epochs, batch_size=batch_size, shuffle=True):
 
 
 if __name__ == '__main__':
-    train(2)
+    train(30)
 
 
