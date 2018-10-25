@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 # !/usr/bin/env python3
 """This defines the common variables in the project"""
-
-from multiprocessing import Lock
-
-model_lock = Lock()
-
 BOARD_SIZE = 8
 
 WHITE = -1

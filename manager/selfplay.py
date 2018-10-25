@@ -3,12 +3,14 @@
 """this control the self-play of the game and """
 
 from game.common import *
+from conf import data_lock, log_lock
+from conf import model_lock
 import json
 from game.board import Board
 import numpy as np
 from cnn.model import ReversiModel
 from mcts.uctAlg import UCTAlg
-from manager.config import features_path, label_path
+from manager.config import features_path, label_path, error_log
 
 from manager.config import selfplay_monitor
 
@@ -54,10 +56,16 @@ class Play(object):
             print('label shape...', self.labels.shape)
             print('final labels...', self.labels)
 
-        with open(label_path, "a+") as f:
-            np.savetxt(f, self.labels, fmt='%f')
-        with open(features_path, "a+") as f:
-            np.savetxt(f, self.features, fmt='%i')  # (tup) can save the array row wise
+        data_lock.acquire()
+        try:
+            with open(label_path, "a+") as f:
+                np.savetxt(f, self.labels, fmt='%f')
+            with open(features_path, "a+") as f:
+                np.savetxt(f, self.features, fmt='%i')  # (tup) can save the array row wise
+        except Exception as e:
+            print(e)
+        finally:
+            data_lock.release()
 
     def play(self, player1, player2, turn, p1isp2):
         """the black side first to place a disc, add output to black_prompt responses and to white_prompt requests, vice versa"""
@@ -169,27 +177,30 @@ class SelfPlay(object):
 
 def play_games(rounds):
     """play games according to rounds """
-    if rounds < -1:
-        print('please select correct rounds to begin')
-    elif rounds is -1:
-        while 1:
-            SelfPlay().play_one_game()
-    else:
-        for _ in range(rounds):
-            SelfPlay().play_one_game()
+    try:
+        if rounds < -1:
+            print('please select correct rounds to begin')
+        elif rounds is -1:
+            while 1:
+                SelfPlay().play_one_game()
+        else:
+            for _ in range(rounds):
+                SelfPlay().play_one_game()
+    except Exception as e:
+        log_lock.acquire()
+        try:
+            with open(error_log, 'a+') as f:
+                f.write(str(e) + '\n')
+        except FileNotFoundError:
+            pass
+        finally:
+            log_lock.release()
+        # print(e)
 
 
 def main():
     # play_games(-1)
-    from pympler import summary, muppy
-    all_objects = muppy.get_objects()
-    sum1 = summary.summarize(all_objects)
-    summary.print_(sum1)
-
     SelfPlay().play_one_game()
-    all_objects = muppy.get_objects()
-    sum1 = summary.summarize(all_objects)
-    summary.print_(sum1)
 
 
 if __name__ == '__main__':

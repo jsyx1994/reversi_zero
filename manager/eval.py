@@ -2,17 +2,18 @@
 # !/usr/bin/env python3
 
 from game.common import *
+from conf import model_lock, log_lock
 from manager.config import eval_rounds
 import shutil
 from cnn.config import model_challenger_path, model_defender_path
-from manager.config import eval_log_path
+from manager.config import eval_log_path, error_log
 import datetime
 import time
 from manager.selfplay import SelfPlay
 IDLE_TIME = 600
 
 
-def update_generation():
+def update_generation(winning_rate):
     model_lock.acquire()
     try:
         shutil.copy(src=model_challenger_path, dst=model_defender_path)
@@ -22,8 +23,8 @@ def update_generation():
     else:
         print('model updated')
         ts = datetime.datetime.now()
-        with open(eval_log_path, 'a') as f:
-            f.write(str(ts) + ' model updated\n')
+        with open(eval_log_path, 'a+') as f:
+            f.write(str(ts) + 'winning rate ' + str(winning_rate) + ' model updated\n')
             f.close()
     finally:
         model_lock.release()
@@ -44,19 +45,29 @@ def eval(rounds):
             challenger_wins += 1
             print('round {}: challenger win, total wins: {}'.format(t+1, challenger_wins))
         else:
-            print('round {}: challenger failed'.format(t))
+            print('round {}: challenger failed'.format(t+1))
         p1, p2 = p2, p1
 
     winning_rate = challenger_wins/rounds
     print('winning rate: {}'.format(winning_rate))
     if winning_rate > .55:
-        update_generation()
+        update_generation(winning_rate)
 
 def eval4ever(rounds=eval_rounds):
     while 1:
-        eval(rounds=rounds)
-        print('Have a {} seconds rest...'.format(IDLE_TIME))
-        time.sleep(IDLE_TIME)
+        try:
+            eval(rounds=rounds)
+            print('Have a {} seconds rest...'.format(IDLE_TIME))
+            time.sleep(IDLE_TIME)
+        except Exception as e:
+            log_lock.acquire()
+            try:
+                with open(error_log, 'a+') as f:
+                    f.write(str(e) + '\n')
+            except FileNotFoundError:
+                pass
+            finally:
+                log_lock.release()
 
 
 if __name__ == '__main__':
