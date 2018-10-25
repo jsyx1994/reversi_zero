@@ -13,9 +13,9 @@ eval_rounds = 20
 # opt
 batch_size = 256
 opt_epochs = 30
-opt_idle_time = 60
+opt_idle_time = 100
 opt_wait_date_time = 300
-opt_data_threshold = 25000
+opt_data_threshold = 10000
 
 # slefplay
 
