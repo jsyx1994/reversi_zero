@@ -68,12 +68,14 @@ class UCTAlg(object):
         """while the selection encounter a leaf node, expand its children and choose the best child of this node"""
         state = uct.my_board
         if state.game_over:
-            self.backup(uct, 1, state.side_color)
+            winner = state.judge()
+            reward = 1 if winner == state.side_color else -1
+            self.backup(uct, reward, state.side_color)
         feature_input = self.calc_features(state)
         prediction = self.reversi_model.predict(feature_input.reshape(-1, BOARD_SIZE, BOARD_SIZE, 3))
         p = prediction[0].reshape(8, 8)
         v = prediction[1].reshape(1)
-
+        # print(p, v)
         self.backup(uct, v[0], state.side_color)
         moves = state.generate_moves(uct.state.side_color)
         children = uct.my_children
@@ -102,39 +104,29 @@ class UCTAlg(object):
                 children.append(node)
         # return self.choose_best_child(uct=uct)
 
-    def simulate(self, uct):
-        simu_board = copy.deepcopy(uct.my_board)  # not time-consuming
-        while not simu_board.game_over:
-            action = SmartRandom.smart_random(simu_board)
-            if action:
-                simu_board.disc_place(simu_board.side_color, action[0], action[1])
-                simu_board.turn_color()
-            else:
-                simu_board.turn_color()
-        winner = simu_board.judge()
-        # print('winner', winner)
-        self.backup(uct, 1, winner)
+    # def simulate(self, uct):
+    #     simu_board = copy.deepcopy(uct.my_board)  # not time-consuming
+    #     while not simu_board.game_over:
+    #         action = SmartRandom.smart_random(simu_board)
+    #         if action:
+    #             simu_board.disc_place(simu_board.side_color, action[0], action[1])
+    #             simu_board.turn_color()
+    #         else:
+    #             simu_board.turn_color()
+    #     winner = simu_board.judge()
+    #     # print('winner', winner)
+    #     self.backup(uct, 1, winner)
 
     def backup(self, uct, reward, player_color):
         """update the reward of the player_color"""
         while uct is not None:
             uct.visit_time += 1
             board = uct.my_board
-            # if player_color == BLACK:    # black wins the game
-            #     if board.side_color == BLACK:     # because
-            #         uct.total_reward -= reward
-            #     else:
-            #         uct.total_reward += reward
-            # elif player_color == WHITE:
-            #     if board.side_color == WHITE:
-            #         uct.total_reward += reward
-            #     else:
-            #         uct.total_reward -= reward
             board_color = board.side_color
             if player_color == board_color:
                 uct.total_reward += reward
             else:
-                pass
+                uct.total_reward -= reward
                 # uct.total_reward -= reward
             uct = uct.my_parent
 
@@ -222,9 +214,7 @@ class UCTAlg(object):
         psa = uct.psa
         if nsa == 0:
             return float('inf')
-        if uct is self.root_node:
-            pass
-        equation = q_v_ / nsa + Cpuct * psa * math.sqrt(sigma_nsb) / (nsa + 1)
+        equation = q_v_ / nsa + Cpuct * psa * math.sqrt(sigma_nsb) / nsa
         return equation
 
     def get_weight(self, uct):
@@ -262,24 +252,8 @@ class UCTAlg(object):
 
 if __name__ == '__main__':
     from cnn.model import ReversiModel
-
-    from pympler import summary, muppy
-    import sys
-    import objgraph
-    all_objects = muppy.get_objects()
-    sum1 = summary.summarize(all_objects)
-    summary.print_(sum1)
     reversi_model = ReversiModel()
-    reversi_model.model.predict(np.random.random((1, 8, 8, 3)))
-    del reversi_model
-    # UCTAlg(reversi_model)
-
-    # objgraph.show_backrefs(reversi_model, max_depth=5, filename="direct.dot")
-
-    all_objects = muppy.get_objects()
-    sum1 = summary.summarize(all_objects)
-    summary.print_(sum1)
-
+    print(reversi_model.model.predict(np.random.random((1, 8, 8, 3))))
     UCTAlg(reversi_model)
 
     # del reversi_model

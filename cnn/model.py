@@ -194,7 +194,8 @@ def loss_for_policy(y_true, y_pred):
 
 
 def loss_for_value(y_true, y_pred):
-    return mean_squared_error(y_true, y_pred)
+    return (y_true - y_pred)**2
+    # return mean_squared_error(y_true, y_pred)
 
 
 def train(epochs, batch_size=256, shuffle=True):

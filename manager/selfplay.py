@@ -119,7 +119,6 @@ class Play(object):
 
     def transform_history_matrix(self):
         """a board state can be transformed by the rotation and transposition to accelerate the data-generation"""
-
         def rotation():
             pass
 
