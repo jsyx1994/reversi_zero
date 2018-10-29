@@ -2,7 +2,7 @@
 # !/usr/bin/env python3
 """control self-play, train and evaluate"""
 
-from conf import model_lock, data_lock, log_lock
+from conf import *
 from manager.config import *
 from cnn.model import load_data_set, ReversiModel
 import numpy as np
@@ -80,7 +80,7 @@ def train(epochs, batch_size=batch_size, shuffle=True):
 
 
 def train4ever(epochs=opt_epochs, batch_size=batch_size, shuffle=True):
-
+    memory_gpu(.2)
     while 1:
         try:
             train(
@@ -97,7 +97,7 @@ def train4ever(epochs=opt_epochs, batch_size=batch_size, shuffle=True):
                 pass
             finally:
                 log_lock.release()
-            # print(e)
+            print(e)
         print('have a rest %s secs:' % opt_idle_time)
         time.sleep(opt_idle_time)
 

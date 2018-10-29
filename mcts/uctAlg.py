@@ -2,11 +2,9 @@
 # !/usr/bin/env python3
 """This implements the UCT algorithm"""
 
-import copy
 import random
 import math
 from game.common import *
-from game.smart_random import SmartRandom
 from mcts.ucTree import UCT
 from game.board import Board
 import numpy as np
@@ -35,9 +33,9 @@ class UCTAlg(object):
         self.reversi_model = predict_model.model
 
 
-    def run(self):
+    def run(self,time_limit):
         start = time.time()
-        while time.time() - start < TIME_LIMIT:
+        while time.time() - start < time_limit:
             self.select(self.working_node)
             # self.backup(best, 0, 0)
             # print('select use:', time.time() - start)

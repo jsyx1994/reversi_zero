@@ -230,15 +230,4 @@ if __name__ == '__main__':
     # test1()
     ReversiModel().rebuild_model()
 
-    # from pympler import summary, muppy
-    # all_objects = muppy.get_objects()
-    # sum1 = summary.summarize(all_objects)
-    # summary.print_(sum1)
-    # import objgraph
-    # ReversiModel()
-    # # objgraph.show_backrefs(a, max_depth=10, filename="direct.dot")
-    # all_objects = muppy.get_objects()
-    # sum1 = summary.summarize(all_objects)
-    # summary.print_(sum1)
-
 

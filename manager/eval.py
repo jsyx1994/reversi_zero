@@ -2,7 +2,7 @@
 # !/usr/bin/env python3
 
 from game.common import *
-from conf import model_lock, log_lock
+from conf import *
 from manager.config import eval_rounds
 import shutil
 from cnn.config import model_challenger_path, model_defender_path
@@ -53,7 +53,9 @@ def eval(rounds):
     if winning_rate > .55:
         update_generation(winning_rate)
 
+
 def eval4ever(rounds=eval_rounds):
+    memory_gpu(.02)
     while 1:
         try:
             eval(rounds=rounds)

@@ -3,8 +3,7 @@
 """this control the self-play of the game and """
 
 from game.common import *
-from conf import data_lock, log_lock
-from conf import model_lock
+from conf import *
 import json
 from game.board import Board
 import numpy as np
@@ -78,9 +77,9 @@ class Play(object):
             current2play = player2
 
         if p1isp2:  # self play, use stochastic policy
-            results = UCTAlg(predict_model=current2play, json=prompt, mode='stoch').run()
+            results = UCTAlg(predict_model=current2play, json=prompt, mode='stoch').run(time_limit=1)
         else:   # eval, use deterministic policy
-            results = UCTAlg(predict_model=current2play, json=prompt, mode='comp').run()
+            results = UCTAlg(predict_model=current2play, json=prompt, mode='comp').run(time_limit=.2)
 
         res, pi = results[0], results[1]  # (3, 2)
 
@@ -135,9 +134,9 @@ class SelfPlay(object):
         assert (player2 is 'defender') or (player2 is 'challenger')
         self.p1 = player1
         self.p2 = player2
+        memory_gpu(.02)     # set the memory of gpu
         model_lock.acquire()
         try:
-            pass
             # the model will not change in one battle
             self.player1 = ReversiModel(mode=player1)  # every time start a new battle, reload the newest model
             self.player2 = ReversiModel(mode=player2)
@@ -145,7 +144,6 @@ class SelfPlay(object):
             model_lock.release()
             print(e)
         else:
-            pass
             self.player1.model.predict(np.random.random((1, BOARD_SIZE, BOARD_SIZE, 3)))  # initialize the generator to accelerate the simulation
             self.player2.model.predict(np.random.random((1, BOARD_SIZE, BOARD_SIZE, 3)))
         finally:

@@ -8,7 +8,7 @@ error_log = root_dir + '/log/error.log'
 tensorboard_path = root_dir + '/log/tensorboard/'
 epochpickle_path = root_dir + '/log/curr_epoch'
 # eval
-eval_rounds = 20
+eval_rounds = 60
 
 # opt
 batch_size = 256
@@ -19,4 +19,4 @@ opt_data_threshold = 10000
 
 # slefplay
 
-selfplay_monitor = 0
+selfplay_monitor = 1
