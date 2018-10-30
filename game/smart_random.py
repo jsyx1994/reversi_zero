@@ -2,7 +2,7 @@
 # !/usr/bin/env python3
 """this contains the different strategies"""
 
-import game.common  as cm
+import game.common as cm
 import random
 
 

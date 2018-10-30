@@ -45,7 +45,7 @@ def eval(rounds):
             challenger_wins += 1
             print('round {}: challenger win, total wins: {}'.format(t+1, challenger_wins))
         else:
-            print('round {}: challenger failed'.format(t+1))
+            print('round {}: challenger failed, total wins: {}'.format(t+1, challenger_wins))
         p1, p2 = p2, p1
 
     winning_rate = challenger_wins/rounds

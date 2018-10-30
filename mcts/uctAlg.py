@@ -251,7 +251,7 @@ class UCTAlg(object):
 if __name__ == '__main__':
     from cnn.model import ReversiModel
     reversi_model = ReversiModel()
-    print(reversi_model.model.predict(np.random.random((1, 8, 8, 3))))
+    print(reversi_model.model.predict(np.random.random((1, BOARD_SIZE, BOARD_SIZE, 3))))
     UCTAlg(reversi_model)
 
     # del reversi_model

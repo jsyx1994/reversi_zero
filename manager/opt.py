@@ -80,7 +80,7 @@ def train(epochs, batch_size=batch_size, shuffle=True):
 
 
 def train4ever(epochs=opt_epochs, batch_size=batch_size, shuffle=True):
-    memory_gpu(.2)
+    memory_gpu(.1)
     while 1:
         try:
             train(

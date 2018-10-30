@@ -7,7 +7,7 @@ from keras.layers import Conv2D, Dense, BatchNormalization, Flatten, Input, Acti
 from keras import Model
 from keras.initializers import TruncatedNormal
 from keras.regularizers import l2
-from keras.losses import mean_squared_error, categorical_crossentropy
+from keras.losses import categorical_crossentropy
 from keras.optimizers import SGD
 from keras.models import save_model, load_model
 from keras.callbacks import TensorBoard
