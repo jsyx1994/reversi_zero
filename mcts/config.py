@@ -1,4 +1,4 @@
-Cpuct = 6
+Cpuct = 10
 TIME_LIMIT = 1.1
 
 # self play

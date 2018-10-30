@@ -217,7 +217,7 @@ def test1():
     # print('winner', z.shape)
     # model.model.fit(x=x, y=[y, z], batch_size=C.batch_size, epochs=100, shuffle=True)
     # model.save_challenger_model()
-    a = model.model.predict(x[0].reshape(-1, 8, 8, 3))[0].reshape(8,8)
+    a = model.model.predict(x[0].reshape(-1, BOARD_SIZE, BOARD_SIZE, 3))[0].reshape(BOARD_SIZE, BOARD_SIZE)
     print(a)
 
 
@@ -232,5 +232,3 @@ def test3():
 if __name__ == '__main__':
     # test1()
     ReversiModel().rebuild_model()
-
-

@@ -71,7 +71,7 @@ class UCTAlg(object):
             self.backup(uct, reward, state.side_color)
         feature_input = self.calc_features(state)
         prediction = self.reversi_model.predict(feature_input.reshape(-1, BOARD_SIZE, BOARD_SIZE, 3))
-        p = prediction[0].reshape(8, 8)
+        p = prediction[0].reshape(BOARD_SIZE, BOARD_SIZE)
         v = prediction[1].reshape(1)
         # print(p, v)
         self.backup(uct, v[0], state.side_color)

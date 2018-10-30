@@ -42,8 +42,9 @@ class Board(object):
     def initialize_board(self):
         """put the beginning state of the game"""
         self.board = np.zeros(shape=(BOARD_SIZE, BOARD_SIZE), dtype=np.int)   # another way of defining board: [[for x in range(cm.BOARD_SIZE)] for x in range(cm.BOARD_SIZE)]
-        self.board[3][3] = self.board[4][4] = WHITE
-        self.board[4][3] = self.board[3][4] = BLACK
+        center = int(BOARD_SIZE / 2)
+        self.board[center-1][center-1] = self.board[center][center] = WHITE
+        self.board[center][center-1] = self.board[center-1][center] = BLACK
         self.black_piece = 2
         self.white_piece = 2
 
@@ -61,7 +62,7 @@ class Board(object):
 
     @staticmethod
     def boarder_check(ix, iy):
-        return 0 <= ix < 8 and 0 <= iy < 8
+        return 0 <= ix < BOARD_SIZE and 0 <= iy < BOARD_SIZE
 
     @staticmethod
     def move_step(x, y, d0, d1):
