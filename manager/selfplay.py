@@ -12,7 +12,7 @@ from mcts.uctAlg import UCTAlg
 from manager.config import features_path, label_path, error_log
 
 from manager.config import selfplay_monitor
-
+from manager.config import eval_timelimit, selfplay_timelimit
 
 class Play(object):
     def __init__(self):
@@ -77,9 +77,9 @@ class Play(object):
             current2play = player2
 
         if p1isp2:  # self play, use stochastic policy
-            results = UCTAlg(predict_model=current2play, json=prompt, mode='stoch').run(time_limit=1)
+            results = UCTAlg(predict_model=current2play, json=prompt, mode='stoch').run(time_limit=selfplay_timelimit)
         else:   # eval, use deterministic policy
-            results = UCTAlg(predict_model=current2play, json=prompt, mode='comp').run(time_limit=.2)
+            results = UCTAlg(predict_model=current2play, json=prompt, mode='comp').run(time_limit=eval_timelimit)
 
         res, pi = results[0], results[1]  # (3, 2)
 

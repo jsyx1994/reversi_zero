@@ -15,7 +15,7 @@ import os
 import cnn.config as C
 from game.common import BOARD_SIZE, HISTORY_CHANNEL
 import shutil
-
+from conf import data_lock
 
 class ReversiModel(object):
     def __init__(self, mode='challenger'):
@@ -181,8 +181,12 @@ class ReversiModel(object):
 
 
 def load_data_set():
-    data = np.loadtxt(C.features_path)
-    target = np.loadtxt(C.labels_path)
+    data_lock.acquire()
+    try:
+        data = np.loadtxt(C.features_path)
+        target = np.loadtxt(C.labels_path)
+    finally:
+        data_lock.release()
     x = data.reshape(-1, BOARD_SIZE, BOARD_SIZE, HISTORY_CHANNEL * 2 + 1)
     y = target[:, :-1]
     z = target[:, -1].reshape(-1, 1)
@@ -190,12 +194,11 @@ def load_data_set():
 
 
 def loss_for_policy(y_true, y_pred):
-    return categorical_crossentropy(y_true, y_pred)
+    return categorical_crossentropy(y_true, y_pred)     # sum of every ele in vector
 
 
 def loss_for_value(y_true, y_pred):
     return (y_true - y_pred)**2
-    # return mean_squared_error(y_true, y_pred)
 
 
 def train(epochs, batch_size=256, shuffle=True):

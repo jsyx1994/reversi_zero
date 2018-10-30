@@ -2,7 +2,7 @@ from conf import root_dir
 
 # Train
 use_tensorboard = True
-ln_rate = 1e-4
+ln_rate = 1e-2
 ln_momentum = .9
 
 # Model
