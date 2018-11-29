@@ -2,7 +2,7 @@
 # !/usr/bin/env python3
 """control the parallelism"""
 from multiprocessing import Process
-
+from manager.config import self_pool
 
 def self_play_pool(pool_size=4):
     for i in range(pool_size):
@@ -15,7 +15,8 @@ if __name__ == '__main__':
     import manager.eval as ev
     import manager.opt as op
     import manager.selfplay as sp
-    self_play_pool(6)
+    self_play_pool(self_pool)
+
     Process(target=op.train4ever, args=()).start()
     Process(target=ev.eval4ever, args=()).start()
 

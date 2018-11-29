@@ -21,11 +21,11 @@ def update_generation(winning_rate):
         model_lock.release()
         print('update model failed...', e)
     else:
+        print()
         print('model updated')
         ts = datetime.datetime.now()
         with open(eval_log_path, 'a+') as f:
-            f.write(str(ts) + 'winning rate ' + str(winning_rate) + ' model updated\n')
-            f.close()
+            f.write(str(ts) + ' winning rate ' + str(winning_rate) + ' model updated\n')
     finally:
         model_lock.release()
 
@@ -50,8 +50,13 @@ def eval(rounds):
 
     winning_rate = challenger_wins/rounds
     print('winning rate: {}'.format(winning_rate))
+
     if winning_rate > .55:
         update_generation(winning_rate)
+    else:
+        ts = datetime.datetime.now()
+        with open(eval_log_path, 'a+') as f:
+            f.write(str(ts) + ' winning rate ' + str(winning_rate) + '\n')
 
 
 def eval4ever(rounds=eval_rounds):

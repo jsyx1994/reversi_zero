@@ -8,6 +8,7 @@ from cnn.model import load_data_set, ReversiModel
 import numpy as np
 import cnn.config as C
 import time
+import keras.backend as K
 from keras.callbacks import TensorBoard
 import pickle
 
@@ -61,7 +62,8 @@ def train(epochs, batch_size=batch_size, shuffle=True):
             # print(initial_epoch)
             end_epoch = epochs + initial_epoch
             tbCallBack = TensorBoard(log_dir=tensorboard_path, histogram_freq=0, write_graph=True, write_images=True)
-
+            K.set_value(model.optimizer.lr, 0.005)
+            print('learning rate: ',K.get_value(model.optimizer.lr))
             model.fit(x=x, y=[y, z], batch_size=batch_size, initial_epoch=initial_epoch, epochs=end_epoch, shuffle=shuffle, callbacks=[tbCallBack])
 
             with open(epochpickle_path, 'wb+') as handle:
@@ -80,7 +82,7 @@ def train(epochs, batch_size=batch_size, shuffle=True):
 
 
 def train4ever(epochs=opt_epochs, batch_size=batch_size, shuffle=True):
-    memory_gpu(.1)
+    memory_gpu(.2)
     while 1:
         try:
             train(
@@ -103,6 +105,6 @@ def train4ever(epochs=opt_epochs, batch_size=batch_size, shuffle=True):
 
 
 if __name__ == '__main__':
-    train(30)
+    train(100)
 
 

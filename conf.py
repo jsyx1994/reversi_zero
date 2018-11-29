@@ -2,6 +2,8 @@
 import os
 from multiprocessing import Lock
 
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
+
 def memory_gpu(fraction):
     from keras.backend.tensorflow_backend import set_session
     import tensorflow as tf

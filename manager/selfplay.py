@@ -128,13 +128,16 @@ class Play(object):
 class SelfPlay(object):
     """An instance in one battle"""
 
-    def __init__(self, player1='challenger', player2='challenger'):
-        """default self play <=> player1 is player2"""
+    def __init__(self, player1='defender', player2='defender'):
+        """
+        use defender model to continue generating data until it was replaced by challenger model
+        default self play <=> player1 is player2
+        """
+        memory_gpu(.001)  # set the memory of gpu
         assert (player1 is 'challenger') or (player1 is 'defender')
         assert (player2 is 'defender') or (player2 is 'challenger')
         self.p1 = player1
         self.p2 = player2
-        memory_gpu(.02)     # set the memory of gpu
         model_lock.acquire()
         try:
             # the model will not change in one battle

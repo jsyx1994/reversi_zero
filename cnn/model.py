@@ -7,7 +7,7 @@ from keras.layers import Conv2D, Dense, BatchNormalization, Flatten, Input, Acti
 from keras import Model
 from keras.initializers import TruncatedNormal
 from keras.regularizers import l2
-from keras.losses import categorical_crossentropy
+from keras.losses import mean_squared_error
 from keras.optimizers import SGD
 from keras.models import save_model, load_model
 from keras.callbacks import TensorBoard
@@ -130,9 +130,9 @@ class ReversiModel(object):
 
     def compile_model(self):
         self.model.compile(
-            optimizer=SGD(lr=C.ln_rate, momentum=C.ln_momentum),
+            optimizer=SGD(lr=C.ln_rate, momentum=C.ln_momentum, decay=C.decay),
             loss=[loss_for_policy, loss_for_value],
-            # loss_weights=[1, 1],
+            # loss_weights=[.1, 1],
         )
 
     @staticmethod
@@ -194,11 +194,11 @@ def load_data_set():
 
 
 def loss_for_policy(y_true, y_pred):
-    return categorical_crossentropy(y_true, y_pred)     # sum of every ele in vector
+    return K.sum(-y_true * K.log(y_pred + K.epsilon()), axis=-1)     # sum of every ele in vector
 
 
 def loss_for_value(y_true, y_pred):
-    return (y_true - y_pred)**2
+    return mean_squared_error(y_true, y_pred)
 
 
 def train(epochs, batch_size=256, shuffle=True):

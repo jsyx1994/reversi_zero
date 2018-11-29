@@ -8,6 +8,7 @@ from game.common import *
 from mcts.ucTree import UCT
 from game.board import Board
 import numpy as np
+from conf import  *
 
 from mcts.config import *
 from manager.config import selfplay_monitor
@@ -17,7 +18,6 @@ class UCTAlg(object):
     """alg implements including expand, select, simulate and backup etc."""
 
     def __init__(self, predict_model, json=None, mode='comp'):
-        pass
         """init the root node, configure the IO"""
         uct = UCT()
         uct.state = Board()
@@ -69,13 +69,20 @@ class UCTAlg(object):
             winner = state.judge()
             reward = 1 if winner == state.side_color else -1
             self.backup(uct, reward, state.side_color)
+        #s = time.time()
         feature_input = self.calc_features(state)
+        #print('calc feature use:', time.time() - s)
+        #s = time.time()
         prediction = self.reversi_model.predict(feature_input.reshape(-1, BOARD_SIZE, BOARD_SIZE, 3))
+        #print('predict use:', time.time() - s)
         p = prediction[0].reshape(BOARD_SIZE, BOARD_SIZE)
         v = prediction[1].reshape(1)
         # print(p, v)
         self.backup(uct, v[0], state.side_color)
+        #s = time.time()
         moves = state.generate_moves(uct.state.side_color)
+        #print('generate use:', time.time() - s)
+
         children = uct.my_children
         if not moves:
             node = UCT()  # if it has no move to go, then create a fake node which just change the color
@@ -252,7 +259,7 @@ if __name__ == '__main__':
     from cnn.model import ReversiModel
     reversi_model = ReversiModel()
     print(reversi_model.model.predict(np.random.random((1, BOARD_SIZE, BOARD_SIZE, 3))))
-    UCTAlg(reversi_model)
+    UCTAlg(reversi_model).run(time_limit=1)
 
     # del reversi_model
     # all_objects = muppy.get_objects()
