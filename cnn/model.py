@@ -52,19 +52,43 @@ class ReversiModel(object):
         input_x = x = Input((BOARD_SIZE, BOARD_SIZE, HISTORY_CHANNEL * 2 + 1))
         x = Conv2D(
             input_shape=(BOARD_SIZE, BOARD_SIZE, HISTORY_CHANNEL * 2 + 1),
-            filters=C.cnn_filter_num,
+            filters=32,
             kernel_size=C.cnn_filter_size,
             kernel_initializer=TruncatedNormal(stddev=0.1),
             kernel_regularizer=l2(C.l2_reg),
             bias_initializer=TruncatedNormal(stddev=0.1),
-            # activation='relu',
+            activation='relu',
             padding='same',
             data_format='channels_last',
         )(x)
 
-        x = BatchNormalization()(x)
+        x = Conv2D(
+            input_shape=(BOARD_SIZE, BOARD_SIZE, HISTORY_CHANNEL * 2 + 1),
+            filters=64,
+            kernel_size=C.cnn_filter_size,
+            kernel_initializer=TruncatedNormal(stddev=0.1),
+            kernel_regularizer=l2(C.l2_reg),
+            bias_initializer=TruncatedNormal(stddev=0.1),
+            activation='relu',
+            padding='same',
+            data_format='channels_last',
+        )(x)
 
-        x = Activation('relu')(x)
+        x = Conv2D(
+            input_shape=(BOARD_SIZE, BOARD_SIZE, HISTORY_CHANNEL * 2 + 1),
+            filters=128,
+            kernel_size=C.cnn_filter_size,
+            kernel_initializer=TruncatedNormal(stddev=0.1),
+            kernel_regularizer=l2(C.l2_reg),
+            bias_initializer=TruncatedNormal(stddev=0.1),
+            activation='relu',
+            padding='same',
+            data_format='channels_last',
+        )(x)
+
+        # x = BatchNormalization()(x)
+
+        # x = Activation('relu')(x)
 
         # placeholder for residual block
         for _ in range(C.res_layer_num):
@@ -79,12 +103,12 @@ class ReversiModel(object):
             kernel_initializer=TruncatedNormal(stddev=0.1),
             kernel_regularizer=l2(C.l2_reg),
             bias_initializer=TruncatedNormal(stddev=0.1),
-            # activation='relu',
+            activation='relu',
             # padding='same',
             data_format='channels_last',
         )(pre_out)
-        x = BatchNormalization()(x)
-        x = Activation("relu")(x)
+        # x = BatchNormalization()(x)
+        # x = Activation("relu")(x)
         x = Flatten()(x)
         policy = Dense(
             BOARD_SIZE ** 2,
@@ -102,13 +126,14 @@ class ReversiModel(object):
             kernel_initializer=TruncatedNormal(stddev=0.1),
             bias_initializer=TruncatedNormal(stddev=0.1),
             data_format="channels_last",
+            activation="relu",
             kernel_regularizer=l2(C.l2_reg)
         )(pre_out)
-        x = BatchNormalization()(x)
-        x = Activation("relu")(x)
+        # x = BatchNormalization()(x)
+        #x = Activation("relu")(x)
         x = Flatten()(x)
         x = Dense(
-            256,
+            64,
             kernel_regularizer=l2(C.l2_reg),
             kernel_initializer=TruncatedNormal(stddev=0.1),
             bias_initializer=TruncatedNormal(stddev=0.1),
