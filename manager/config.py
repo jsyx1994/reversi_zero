@@ -9,14 +9,14 @@ tensorboard_path = root_dir + '/log/tensorboard/'
 epochpickle_path = root_dir + '/log/curr_epoch'
 # eval
 eval_rounds = 200
-eval_timelimit = .3
+eval_timelimit = 1
 # selfplay
 self_pool = 2
-selfplay_monitor = 0
-selfplay_timelimit = 1
+selfplay_monitor = 1
+selfplay_timelimit = 2
 
 # opt
-batch_size = 128
+batch_size = 512
 opt_epochs = 10
 
 opt_wait_date_time = 300

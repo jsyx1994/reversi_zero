@@ -41,6 +41,10 @@ class Play(object):
 
     def add_winner_and_writeIO(self, winner, turn):
         """1 if winner is current player which can be calculated by turn else 0 for tie or -1 for lost"""
+
+        # transpose and rotate
+        self.transform_history_matrix()
+
         winner_stack = []
         # turn = labels.shape[0]
         # winner = board.judge()
@@ -49,11 +53,16 @@ class Play(object):
             player_reward = 1 if current_player == winner else (0 if winner == TIE else -1)
             winner_stack.append(player_reward)
         winner_stack = np.asarray(winner_stack).reshape((turn, 1))
+        x = winner_stack
+        for i in range(7):
+            winner_stack = np.vstack((winner_stack, x))
 
+        print(self.labels.shape, winner_stack.shape)
         self.labels = np.hstack((self.labels, winner_stack))
         if DEBUG:
             print('label shape...', self.labels.shape)
             print('final labels...', self.labels)
+
 
         data_lock.acquire()
         try:
@@ -114,15 +123,37 @@ class Play(object):
                 one_feature = np.hstack((one_feature, one_piece))
                 # print(one_feature)
         self.features = np.vstack((self.features, one_feature))
+        #print(self.features.reshape(-1, 8, 8, 3))
         # print(data.shape)
 
     def transform_history_matrix(self):
         """a board state can be transformed by the rotation and transposition to accelerate the data-generation"""
-        def rotation():
-            pass
 
-        def transposition():
-            pass
+        # features
+        origin = self.features.reshape(-1, BOARD_SIZE, BOARD_SIZE, (HISTORY_CHANNEL << 1) + 1)
+        tsp = origin.transpose((0, 2, 1, 3))
+        print(tsp.shape, self.features.shape)
+        sp = self.features.shape
+        self.features = np.vstack((self.features, tsp.reshape(sp)))
+        print(self.features.shape)
+        for i in range(3):
+            origin = np.rot90(origin)
+            tsp = np.rot90(tsp)
+            self.features = np.vstack((self.features, origin.reshape(sp)))
+            self.features = np.vstack((self.features, tsp.reshape(sp)))
+
+        # labels
+        origin = self.labels.reshape(-1, BOARD_SIZE, BOARD_SIZE)
+        sp = self.labels.shape
+        tsp = origin.transpose((0, 2, 1))
+        self.labels = np.vstack((self.labels, tsp.reshape(sp)))
+        for i in range(3):
+            origin = np.rot90(origin)
+            tsp = np.rot90(tsp)
+            self.labels = np.vstack((self.labels, origin.reshape(sp)))
+            self.labels = np.vstack((self.labels, tsp.reshape(sp)))
+
+
 
 
 class SelfPlay(object):
