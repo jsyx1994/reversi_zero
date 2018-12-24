@@ -2,7 +2,7 @@ from conf import root_dir
 from game.common import BOARD_SIZE
 # Train
 use_tensorboard = True
-ln_rate = 5e-3
+ln_rate = 5e-2
 ln_momentum = .9
 decay = 1e-6
 # Model

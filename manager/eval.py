@@ -51,7 +51,7 @@ def eval(rounds):
     winning_rate = challenger_wins/rounds
     print('winning rate: {}'.format(winning_rate))
 
-    if winning_rate > .55:
+    if winning_rate > .53:
         update_generation(winning_rate)
     else:
         ts = datetime.datetime.now()
