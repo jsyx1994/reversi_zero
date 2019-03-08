@@ -130,10 +130,10 @@ class Play(object):
         # features
         origin = self.features.reshape(-1, BOARD_SIZE, BOARD_SIZE, 2)
         tsp = origin.transpose((0, 2, 1, 3))
-        print(tsp.shape, self.features.shape)
+        #print(tsp.shape, self.features.shape)
         sp = self.features.shape
         self.features = np.vstack((self.features, tsp.reshape(sp)))
-        print(self.features.shape)
+        #print(self.features.shape)
         for i in range(3):
             origin = np.rot90(origin)
             tsp = np.rot90(tsp)
