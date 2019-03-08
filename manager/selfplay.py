@@ -115,8 +115,10 @@ class Play(object):
                 e = bd[i][j]
                 if e == color_to_play:
                     one_piece[0] = 1
-                else:
+                elif e == EMPTY:
                     one_piece[0] = 0
+                else:
+                    one_piece[0] = -1
                 one_piece[-1] = 1 if color_to_play == BLACK else 0
                 one_feature = np.hstack((one_feature, one_piece))
                 # print(one_feature)
@@ -177,6 +179,9 @@ class SelfPlay(object):
             self.player2.model.predict(np.random.random((1, BOARD_SIZE, BOARD_SIZE, 2)))
         finally:
             model_lock.release()
+
+    def set_p1_p2(self,p1, p2):
+        self.p1, self.p2 = p1, p2
 
     def play_one_game(self):
         play = Play()

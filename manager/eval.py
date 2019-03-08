@@ -33,8 +33,8 @@ def update_generation(winning_rate):
 def eval(rounds):
     challenger_wins = 0
     p1, p2 = 'defender', 'challenger'
+    eval_play = SelfPlay(player1=p1, player2=p2)
     for t in range(rounds):
-        eval_play = SelfPlay(player1=p1, player2=p2)
         black_player = p1
         winner = eval_play.play_one_game()
         # print('winner is %s' % ('Black' if winner == BLACK else ('White' if winner == WHITE else 'TIE')))
@@ -47,6 +47,7 @@ def eval(rounds):
         else:
             print('round {}: challenger failed, total wins: {}'.format(t+1, challenger_wins))
         p1, p2 = p2, p1
+        eval_play.set_p1_p2(p1,p2)
 
     winning_rate = challenger_wins/rounds
     print('winning rate: {}'.format(winning_rate))
