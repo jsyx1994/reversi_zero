@@ -11,7 +11,7 @@ effective_points = [[0 for x in range(2)] for x in range(BOARD_SIZE)]
 
 
 class Board(object):
-    """This defines the class of thre reversi board"""
+    """This defines the class of the reversi board"""
     def __init__(self):
         self.board = []
         self.black_piece = 0
@@ -28,11 +28,11 @@ class Board(object):
     def print_board(self):
         """debug the output of the current state"""
         print_sp = functools.partial(print, end='  ')
-        print_sp(' ')
+        print('y\\x', end='')
         for i in range(BOARD_SIZE):
             print_sp(i)
         print()
-        for i in range(BOARD_SIZE):
+        for i in range(BOARD_SIZE):  # python row last index [][i]
             print_sp(i)
             for j in range(BOARD_SIZE):
                 e = self.board[j][i]
@@ -43,16 +43,10 @@ class Board(object):
         """put the beginning state of the game"""
         self.board = np.zeros(shape=(BOARD_SIZE, BOARD_SIZE), dtype=np.int)   # another way of defining board: [[for x in range(cm.BOARD_SIZE)] for x in range(cm.BOARD_SIZE)]
         center = int(BOARD_SIZE / 2)
-        self.board[center-1][center-1] = self.board[center][center] = WHITE
+        self.board[center-1][center-1] = self.board[center][center] = WHITE   # place the board according to position
         self.board[center][center-1] = self.board[center-1][center] = BLACK
         self.black_piece = 2
         self.white_piece = 2
-
-        # self.occupied = {(3, 3), (4, 4), (3, 4), (4, 3)}
-        # self.BOARD_HISTORY[3][3][0] = WHITE
-        # self.BOARD_HISTORY[4][4][0] = WHITE
-        # self.BOARD_HISTORY[3][4][0] = BLACK
-        # self.BOARD_HISTORY[4][3][0] = BLACK
 
     def set_color(self, color):
         self.side_color = color
@@ -62,6 +56,12 @@ class Board(object):
 
     @staticmethod
     def boarder_check(ix, iy):
+        """
+        Check the frontier
+        :param ix:
+        :param iy:
+        :return:
+        """
         return 0 <= ix < BOARD_SIZE and 0 <= iy < BOARD_SIZE
 
     @staticmethod
@@ -81,9 +81,6 @@ class Board(object):
             return False
         # self.empty_poses.remove((x, y))     # delete the possible from search the
         is_valid = False
-        c = 0
-        start = time.time()
-
         for d in DIR:
             i, j = self.move_step(x, y, d[0], d[1])
             # i = x + d[0]
@@ -161,7 +158,6 @@ class Board(object):
         y = requests[turn]['y']
         if x >= 0:
             self.disc_place(- self.side_color, x, y)
-
 
     def generate_moves(self, side_color):
         # start = time.time()

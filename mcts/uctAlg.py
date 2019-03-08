@@ -8,7 +8,6 @@ from game.common import *
 from mcts.ucTree import UCT
 from game.board import Board
 import numpy as np
-from conf import  *
 
 from mcts.config import *
 from manager.config import selfplay_monitor
@@ -33,23 +32,16 @@ class UCTAlg(object):
         self.reversi_model = predict_model.model
 
 
-    def run(self,time_limit):
+    def run(self, time_limit):
         start = time.time()
         while time.time() - start < time_limit:
             self.select(self.working_node)
-            # self.backup(best, 0, 0)
-            # print('select use:', time.time() - start)
-            # start = time.time()
-            # start = time.time()
-        # self.root_node.my_board.print_board()
         if selfplay_monitor:
             print('total simulate time:', self.root_node.visit_time)
         if self.mode == 'comp':
             return self.deterministical_decide()
         elif self.mode == 'stoch':
             return self.stochastical_decide()
-
-
 
     def set_working_node(self, node):
         """be flexible to adapt to different situations, aka. may asyc"""
@@ -65,30 +57,30 @@ class UCTAlg(object):
     def expand(self, uct):
         """while the selection encounter a leaf node, expand its children and choose the best child of this node"""
         state = uct.my_board
+        # the mother of the true real reward
         if state.game_over:
             winner = state.judge()
             reward = 1 if winner == state.side_color else -1
-            self.backup(uct, reward, state.side_color)
+            self.backup(uct, reward, winner)
         #s = time.time()
         feature_input = self.calc_features(state)
         #print('calc feature use:', time.time() - s)
-        #s = time.time()
-        prediction = self.reversi_model.predict(feature_input.reshape(-1, BOARD_SIZE, BOARD_SIZE, 3))
-        #print('predict use:', time.time() - s)
+        # s = time.time()
+        prediction = self.reversi_model.predict(feature_input.reshape(-1, BOARD_SIZE, BOARD_SIZE, 2))
+        # print('predict use:', time.time() - s)
         p = prediction[0].reshape(BOARD_SIZE, BOARD_SIZE)
         v = prediction[1].reshape(1)
         # print(p, v)
         self.backup(uct, v[0], state.side_color)
         #s = time.time()
-        moves = state.generate_moves(uct.state.side_color)
+        moves = state.generate_moves(uct.state.side_color)  # 可以与神经网络输出并行
         #print('generate use:', time.time() - s)
 
         children = uct.my_children
         if not moves:
             node = UCT()  # if it has no move to go, then create a fake node which just change the color
             node.initialize_state(uct.state)  # also copy the board history and occupied discs
-            state = node.state
-            state.turn_color()
+            node.state.turn_color()
             node.parent_action = None
             node.parent = uct
 
@@ -109,29 +101,16 @@ class UCTAlg(object):
                 children.append(node)
         # return self.choose_best_child(uct=uct)
 
-    # def simulate(self, uct):
-    #     simu_board = copy.deepcopy(uct.my_board)  # not time-consuming
-    #     while not simu_board.game_over:
-    #         action = SmartRandom.smart_random(simu_board)
-    #         if action:
-    #             simu_board.disc_place(simu_board.side_color, action[0], action[1])
-    #             simu_board.turn_color()
-    #         else:
-    #             simu_board.turn_color()
-    #     winner = simu_board.judge()
-    #     # print('winner', winner)
-    #     self.backup(uct, 1, winner)
-
-    def backup(self, uct, reward, player_color):
+    def backup(self, uct, reward, winner):
         """update the reward of the player_color"""
         while uct is not None:
             uct.visit_time += 1
             board = uct.my_board
-            board_color = board.side_color
-            if player_color == board_color:
-                uct.total_reward += reward
-            else:
+            node_color = board.side_color
+            if winner == node_color:
                 uct.total_reward -= reward
+            else:
+                uct.total_reward += reward  #更新赢家节点之后的动作
                 # uct.total_reward -= reward
             uct = uct.my_parent
 
@@ -238,19 +217,22 @@ class UCTAlg(object):
 
     @staticmethod
     def calc_features(s):
-        one_piece = [0 for _ in range((HISTORY_CHANNEL << 1) + 1)]
+        """
+        simplified features
+        :param s:
+        :return: total board feature
+        """
+        one_piece = [0 for _ in range(2)]   # (x,y) x: if my disc, y: who i am
         one_feature = []
         bd = s.board
         for j in range(BOARD_SIZE):
             for i in range(BOARD_SIZE):
-                e = bd[i][j]
+                e = bd[i][j]  # by row
                 if e == s.side_color:
-                    one_piece[0], one_piece[1] = 1, 0
-                elif e == EMPTY:
-                    one_piece[0], one_piece[1] = 0, 0
+                    one_piece[0] = 1
                 else:
-                    one_piece[0], one_piece[1] = 0, 1
-                one_piece[-1] = 1 if s.side_color == BLACK else 0
+                    one_piece[0] = 0
+                one_piece[1] = 1 if s.side_color == BLACK else 0  # tans to 0,1
                 one_feature = np.hstack((one_feature, one_piece))
         return one_feature
 
@@ -258,9 +240,10 @@ class UCTAlg(object):
 if __name__ == '__main__':
     from cnn.model import ReversiModel
     reversi_model = ReversiModel()
-    print(reversi_model.model.predict(np.random.random((1, BOARD_SIZE, BOARD_SIZE, 3))))
-    UCTAlg(reversi_model).run(time_limit=1)
-
+    print(reversi_model.model.predict(np.random.random((1, BOARD_SIZE, BOARD_SIZE, 2))))
+    uctalg = UCTAlg(reversi_model)
+    uctalg.run(time_limit=4)
+    print()
     # del reversi_model
     # all_objects = muppy.get_objects()
     # sum1 = summary.summarize(all_objects)

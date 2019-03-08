@@ -8,12 +8,12 @@ from keras import Model
 from keras.initializers import TruncatedNormal
 from keras.regularizers import l2
 from keras.losses import mean_squared_error
-from keras.optimizers import SGD
+from keras.optimizers import SGD, Adam
 from keras.models import save_model, load_model
 from keras.callbacks import TensorBoard
 import os
 import cnn.config as C
-from game.common import BOARD_SIZE, HISTORY_CHANNEL
+from game.common import BOARD_SIZE
 import shutil
 from conf import data_lock
 
@@ -49,9 +49,9 @@ class ReversiModel(object):
         # if self.model:
         #     print('model already loads from file.h5')
         #     return
-        input_x = x = Input((BOARD_SIZE, BOARD_SIZE, HISTORY_CHANNEL * 2 + 1))
+        input_x = x = Input((BOARD_SIZE, BOARD_SIZE, 2))
         x = Conv2D(
-            input_shape=(BOARD_SIZE, BOARD_SIZE, HISTORY_CHANNEL * 2 + 1),
+            input_shape=(BOARD_SIZE, BOARD_SIZE, 2),
             filters=32,
             kernel_size=C.cnn_filter_size,
             kernel_initializer=TruncatedNormal(stddev=0.1),
@@ -63,7 +63,7 @@ class ReversiModel(object):
         )(x)
 
         x = Conv2D(
-            input_shape=(BOARD_SIZE, BOARD_SIZE, HISTORY_CHANNEL * 2 + 1),
+            input_shape=(BOARD_SIZE, BOARD_SIZE,2),
             filters=64,
             kernel_size=C.cnn_filter_size,
             kernel_initializer=TruncatedNormal(stddev=0.1),
@@ -74,21 +74,17 @@ class ReversiModel(object):
             data_format='channels_last',
         )(x)
 
-        x = Conv2D(
-            input_shape=(BOARD_SIZE, BOARD_SIZE, HISTORY_CHANNEL * 2 + 1),
-            filters=128,
-            kernel_size=C.cnn_filter_size,
-            kernel_initializer=TruncatedNormal(stddev=0.1),
-            kernel_regularizer=l2(C.l2_reg),
-            bias_initializer=TruncatedNormal(stddev=0.1),
-            activation='relu',
-            padding='same',
-            data_format='channels_last',
-        )(x)
-
-        # x = BatchNormalization()(x)
-
-        # x = Activation('relu')(x)
+        # x = Conv2D(
+        #     input_shape=(BOARD_SIZE, BOARD_SIZE, 2),
+        #     filters=128,
+        #     kernel_size=C.cnn_filter_size,
+        #     kernel_initializer=TruncatedNormal(stddev=0.1),
+        #     kernel_regularizer=l2(C.l2_reg),
+        #     bias_initializer=TruncatedNormal(stddev=0.1),
+        #     activation='relu',
+        #     padding='same',
+        #     data_format='channels_last',
+        # )(x)
 
         # placeholder for residual block
         for _ in range(C.res_layer_num):
@@ -155,7 +151,7 @@ class ReversiModel(object):
 
     def compile_model(self):
         self.model.compile(
-            optimizer=SGD(lr=C.ln_rate, momentum=C.ln_momentum, decay=C.decay),
+            optimizer=Adam(lr=C.ln_rate, decay=C.decay),
             loss=[loss_for_policy, loss_for_value],
             # loss_weights=[.1, 1],
         )
@@ -212,7 +208,7 @@ def load_data_set():
         target = np.loadtxt(C.labels_path)
     finally:
         data_lock.release()
-    x = data.reshape(-1, BOARD_SIZE, BOARD_SIZE, HISTORY_CHANNEL * 2 + 1)
+    x = data.reshape(-1, BOARD_SIZE, BOARD_SIZE, 2)
     y = target[:, :-1]
     z = target[:, -1].reshape(-1, 1)
     return x, y, z
@@ -250,10 +246,11 @@ def test3():
     x, y, z = load_data_set()
     model = load_model('../models/challenger.h5',
                        custom_objects={'loss_for_policy': loss_for_policy, 'loss_for_value': loss_for_value})
-    tb_callback = TensorBoard(log_dir='../log/', histogram_freq=0, write_graph=True, write_images=True)
-    model.fit(x=x, y=[y, z], batch_size=256, epochs=10, shuffle=True, callbacks=[tb_callback], initial_epoch=0)
+    tb_callback = TensorBoard(log_dir='../log/', histogram_freq=1, write_graph=True, write_images=True)
+    model.fit(x=x, y=[y, z], batch_size=128, epochs=10, shuffle=True, validation_data=(x, [y, z]), callbacks=[tb_callback], initial_epoch=0)
 
 
 if __name__ == '__main__':
     # test1()
-    ReversiModel().rebuild_model()
+    # ReversiModel().rebuild_model()
+    test3()

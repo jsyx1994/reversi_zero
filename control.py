@@ -4,6 +4,7 @@
 from multiprocessing import Process
 from manager.config import self_pool
 
+
 def self_play_pool(pool_size=4):
     for i in range(pool_size):
         Process(target=sp.play_games, args=(-1,)).start()

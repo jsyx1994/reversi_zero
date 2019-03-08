@@ -25,7 +25,7 @@ class Play(object):
         self.wp = json.loads(white_prompt)
         self.board = Board()
         self.labels = np.reshape([], (-1, BOARD_SIZE ** 2))  # one turn has (8,8,3) -> 64 * 3
-        self.features = np.reshape([], (-1, BOARD_SIZE ** 2 * (HISTORY_CHANNEL * 2 + 1)))  # one turn has 64 + 1
+        self.features = np.reshape([], (-1, BOARD_SIZE ** 2 * 2))  # one turn has 64 + 1
         # all_objects = muppy.get_objects()
         # sum1 = summary.summarize(all_objects)
         # summary.print_(sum1)
@@ -54,7 +54,7 @@ class Play(object):
             winner_stack.append(player_reward)
         winner_stack = np.asarray(winner_stack).reshape((turn, 1))
         x = winner_stack
-        for i in range(7):
+        for i in range(7):  # because of having added the transformed matrix
             winner_stack = np.vstack((winner_stack, x))
 
         print(self.labels.shape, winner_stack.shape)
@@ -107,18 +107,16 @@ class Play(object):
             print('%s round has played' % ('black' if color_to_play == BLACK else 'white'))
 
     def calc_features(self, color_to_play):
-        one_piece = [0 for _ in range((HISTORY_CHANNEL << 1) + 1)]
+        one_piece = [0 for _ in range(2)]
         one_feature = []
         bd = self.board.board
         for j in range(BOARD_SIZE):
             for i in range(BOARD_SIZE):
                 e = bd[i][j]
                 if e == color_to_play:
-                    one_piece[0], one_piece[1] = 1, 0
-                elif e == EMPTY:
-                    one_piece[0], one_piece[1] = 0, 0
+                    one_piece[0] = 1
                 else:
-                    one_piece[0], one_piece[1] = 0, 1
+                    one_piece[0] = 0
                 one_piece[-1] = 1 if color_to_play == BLACK else 0
                 one_feature = np.hstack((one_feature, one_piece))
                 # print(one_feature)
@@ -130,7 +128,7 @@ class Play(object):
         """a board state can be transformed by the rotation and transposition to accelerate the data-generation"""
 
         # features
-        origin = self.features.reshape(-1, BOARD_SIZE, BOARD_SIZE, (HISTORY_CHANNEL << 1) + 1)
+        origin = self.features.reshape(-1, BOARD_SIZE, BOARD_SIZE, 2)
         tsp = origin.transpose((0, 2, 1, 3))
         print(tsp.shape, self.features.shape)
         sp = self.features.shape
@@ -152,9 +150,6 @@ class Play(object):
             tsp = np.rot90(tsp)
             self.labels = np.vstack((self.labels, origin.reshape(sp)))
             self.labels = np.vstack((self.labels, tsp.reshape(sp)))
-
-
-
 
 class SelfPlay(object):
     """An instance in one battle"""
@@ -178,8 +173,8 @@ class SelfPlay(object):
             model_lock.release()
             print(e)
         else:
-            self.player1.model.predict(np.random.random((1, BOARD_SIZE, BOARD_SIZE, 3)))  # initialize the generator to accelerate the simulation
-            self.player2.model.predict(np.random.random((1, BOARD_SIZE, BOARD_SIZE, 3)))
+            self.player1.model.predict(np.random.random((1, BOARD_SIZE, BOARD_SIZE, 2)))  # initialize the generator to accelerate the simulation
+            self.player2.model.predict(np.random.random((1, BOARD_SIZE, BOARD_SIZE, 2)))
         finally:
             model_lock.release()
 
