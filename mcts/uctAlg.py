@@ -222,7 +222,7 @@ class UCTAlg(object):
         :param s:
         :return: total board feature
         """
-        one_piece = [0 for _ in range(2)]   # (x,y) x: if my disc, y: who i am
+        one_piece = [0 for _ in range(2)]   # (x,y) x: if my disc or enermy, y: who i am
         one_feature = []
         bd = s.board
         for j in range(BOARD_SIZE):
@@ -230,8 +230,10 @@ class UCTAlg(object):
                 e = bd[i][j]  # by row
                 if e == s.side_color:
                     one_piece[0] = 1
-                else:
+                elif e == EMPTY:
                     one_piece[0] = 0
+                else:
+                    one_piece[0] = -1
                 one_piece[1] = 1 if s.side_color == BLACK else 0  # tans to 0,1
                 one_feature = np.hstack((one_feature, one_piece))
         return one_feature
