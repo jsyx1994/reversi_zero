@@ -58,6 +58,7 @@ class ReversiModel(object):
             kernel_regularizer=l2(C.l2_reg),
             bias_initializer=TruncatedNormal(stddev=0.1),
             activation='relu',
+            name='Conv32',
             padding='same',
             data_format='channels_last',
         )(x)
@@ -70,6 +71,7 @@ class ReversiModel(object):
             kernel_regularizer=l2(C.l2_reg),
             bias_initializer=TruncatedNormal(stddev=0.1),
             activation='relu',
+            name='Conv64',
             padding='same',
             data_format='channels_last',
         )(x)
@@ -100,6 +102,7 @@ class ReversiModel(object):
             kernel_regularizer=l2(C.l2_reg),
             bias_initializer=TruncatedNormal(stddev=0.1),
             activation='relu',
+            name='ConvPolicy',
             # padding='same',
             data_format='channels_last',
         )(pre_out)
@@ -122,6 +125,7 @@ class ReversiModel(object):
             kernel_initializer=TruncatedNormal(stddev=0.1),
             bias_initializer=TruncatedNormal(stddev=0.1),
             data_format="channels_last",
+            name='ConvValue',
             activation="relu",
             kernel_regularizer=l2(C.l2_reg)
         )(pre_out)
@@ -252,5 +256,5 @@ def test3():
 
 if __name__ == '__main__':
     # test1()
-    # ReversiModel().rebuild_model()
-    test3()
+    ReversiModel().rebuild_model()
+    # test3()
