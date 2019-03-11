@@ -133,7 +133,7 @@ class Play(object):
         origin = self.features.reshape(-1, BOARD_SIZE, BOARD_SIZE, channel)
         tsp = origin.transpose((0, 2, 1, 3))
         #print(tsp.shape, self.features.shape)
-        sp = self.features.shape
+        # sp = self.features.shape
         self.features = np.vstack((self.features, tsp.reshape(sp)))
         #print(self.features.shape)
         for i in range(3):
@@ -144,14 +144,14 @@ class Play(object):
 
         # labels
         origin = self.labels.reshape(-1, BOARD_SIZE, BOARD_SIZE)
-        sp = self.labels.shape
+        # sp = self.labels.shape
         tsp = origin.transpose((0, 2, 1))
         self.labels = np.vstack((self.labels, tsp.reshape(sp)))
         for i in range(3):
-            origin = np.rot90(origin)
-            tsp = np.rot90(tsp)
-            self.labels = np.vstack((self.labels, origin.reshape(sp)))
-            self.labels = np.vstack((self.labels, tsp.reshape(sp)))
+            origin = np.rot90(origin,axes=(1,2))
+            tsp = np.rot90(tsp,axes=(1,2))
+            self.labels = np.vstack((self.labels, origin))
+            self.labels = np.vstack((self.labels, tsp))
 
 class SelfPlay(object):
     """An instance in one battle"""
