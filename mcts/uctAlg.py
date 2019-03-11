@@ -12,6 +12,7 @@ import numpy as np
 from mcts.config import *
 from manager.config import selfplay_monitor
 import time
+from cnn.config import channel
 
 class UCTAlg(object):
     """alg implements including expand, select, simulate and backup etc."""
@@ -66,7 +67,7 @@ class UCTAlg(object):
         feature_input = self.calc_features(state)
         #print('calc feature use:', time.time() - s)
         # s = time.time()
-        prediction = self.reversi_model.predict(feature_input.reshape(-1, BOARD_SIZE, BOARD_SIZE, 2))
+        prediction = self.reversi_model.predict(feature_input.reshape(-1, BOARD_SIZE, BOARD_SIZE, channel))
         # print('predict use:', time.time() - s)
         p = prediction[0].reshape(BOARD_SIZE, BOARD_SIZE)
         v = prediction[1].reshape(1)
@@ -222,19 +223,19 @@ class UCTAlg(object):
         :param s:
         :return: total board feature
         """
-        one_piece = [0 for _ in range(2)]   # (x,y) x: if my disc or enermy, y: who i am
+        one_piece = [0 for _ in range(channel)]   # (x,y) x: if my disc or enermy, y: who i am
         one_feature = []
         bd = s.board
         for j in range(BOARD_SIZE):
             for i in range(BOARD_SIZE):
                 e = bd[i][j]  # by row
                 if e == s.side_color:
-                    one_piece[0] = 1
+                    one_piece[0], one_piece[1] = 1, 0
                 elif e == EMPTY:
-                    one_piece[0] = 0
+                    one_piece[0], one_piece[1] = 0, 0
                 else:
-                    one_piece[0] = -1
-                one_piece[1] = 1 if s.side_color == BLACK else 0  # tans to 0,1
+                    one_piece[0], one_piece[1] = 0, 1
+                one_piece[-1] = 1 if s.side_color == BLACK else 0
                 one_feature = np.hstack((one_feature, one_piece))
         return one_feature
 
@@ -242,9 +243,20 @@ class UCTAlg(object):
 if __name__ == '__main__':
     from cnn.model import ReversiModel
     reversi_model = ReversiModel()
-    print(reversi_model.model.predict(np.random.random((1, BOARD_SIZE, BOARD_SIZE, 2))))
+
+
+
     uctalg = UCTAlg(reversi_model)
-    uctalg.run(time_limit=4)
+    b = '0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 1 1 1 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 1 0 1 0 1 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1 0 0 1'
+    b = b.split()
+    for i,x in enumerate(b):
+        b[i] = int(b[i])
+    b = np.asarray(b)
+    b = b.reshape(-1,BOARD_SIZE,BOARD_SIZE,channel)
+    print(reversi_model.model.predict(b))
+
+    # print(reversi_model.model.predict(np.random.random((1, BOARD_SIZE, BOARD_SIZE, 3))))
+    # uctalg.run(time_limit=4)
     print()
     # del reversi_model
     # all_objects = muppy.get_objects()

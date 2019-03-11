@@ -49,9 +49,9 @@ class ReversiModel(object):
         # if self.model:
         #     print('model already loads from file.h5')
         #     return
-        input_x = x = Input((BOARD_SIZE, BOARD_SIZE, 2))
+        input_x = x = Input((BOARD_SIZE, BOARD_SIZE, C.channel))
         x = Conv2D(
-            input_shape=(BOARD_SIZE, BOARD_SIZE, 2),
+            input_shape=(BOARD_SIZE, BOARD_SIZE, C.channel),
             filters=32,
             kernel_size=C.cnn_filter_size,
             kernel_initializer=TruncatedNormal(stddev=0.1),
@@ -64,7 +64,7 @@ class ReversiModel(object):
         )(x)
 
         x = Conv2D(
-            input_shape=(BOARD_SIZE, BOARD_SIZE,2),
+            # input_shape=(BOARD_SIZE, BOARD_SIZE,C.channel)
             filters=64,
             kernel_size=C.cnn_filter_size,
             kernel_initializer=TruncatedNormal(stddev=0.1),
@@ -76,17 +76,17 @@ class ReversiModel(object):
             data_format='channels_last',
         )(x)
 
-        # x = Conv2D(
-        #     input_shape=(BOARD_SIZE, BOARD_SIZE, 2),
-        #     filters=128,
-        #     kernel_size=C.cnn_filter_size,
-        #     kernel_initializer=TruncatedNormal(stddev=0.1),
-        #     kernel_regularizer=l2(C.l2_reg),
-        #     bias_initializer=TruncatedNormal(stddev=0.1),
-        #     activation='relu',
-        #     padding='same',
-        #     data_format='channels_last',
-        # )(x)
+        x = Conv2D(
+            # input_shape=(BOARD_SIZE, BOARD_SIZE, C.channel),
+            filters=128,
+            kernel_size=C.cnn_filter_size,
+            kernel_initializer=TruncatedNormal(stddev=0.1),
+            kernel_regularizer=l2(C.l2_reg),
+            bias_initializer=TruncatedNormal(stddev=0.1),
+            activation='relu',
+            padding='same',
+            data_format='channels_last',
+        )(x)
 
         # placeholder for residual block
         for _ in range(C.res_layer_num):
@@ -155,7 +155,7 @@ class ReversiModel(object):
 
     def compile_model(self):
         self.model.compile(
-            optimizer=Adam(lr=C.ln_rate, decay=C.decay),
+            optimizer=Adam(),
             loss=[loss_for_policy, loss_for_value],
             # loss_weights=[.1, 1],
         )
@@ -212,7 +212,7 @@ def load_data_set():
         target = np.loadtxt(C.labels_path)
     finally:
         data_lock.release()
-    x = data.reshape(-1, BOARD_SIZE, BOARD_SIZE, 2)
+    x = data.reshape(-1, BOARD_SIZE, BOARD_SIZE, C.channel)
     y = target[:, :-1]
     z = target[:, -1].reshape(-1, 1)
     return x, y, z
@@ -242,7 +242,7 @@ def test1():
     # print('winner', z.shape)
     # model.model.fit(x=x, y=[y, z], batch_size=C.batch_size, epochs=100, shuffle=True)
     # model.save_challenger_model()
-    a = model.model.predict(x[0].reshape(-1, BOARD_SIZE, BOARD_SIZE, 3))[0].reshape(BOARD_SIZE, BOARD_SIZE)
+    a = model.model.predict(x[0].reshape(-1, BOARD_SIZE, BOARD_SIZE, C.channel))[0].reshape(BOARD_SIZE, BOARD_SIZE)
     print(a)
 
 

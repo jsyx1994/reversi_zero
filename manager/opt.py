@@ -61,9 +61,9 @@ def train(epochs, batch_size=batch_size, shuffle=True):
                 initial_epoch = 0
             # print(initial_epoch)
             end_epoch = epochs + initial_epoch
-            tbCallBack = TensorBoard(log_dir=tensorboard_path, histogram_freq=1, write_graph=True, write_images=True)
+            tbCallBack = TensorBoard(log_dir=tensorboard_path, histogram_freq=0, write_graph=True, write_images=False)
             # K.set_value(model.optimizer.lr, 0.005)
-            print('learning rate: ', K.get_value(model.optimizer.lr))
+            # print('learning rate: ', K.get_value(model.optimizer.lr))
             model.fit(x=x, y=[y, z], batch_size=batch_size, initial_epoch=initial_epoch, epochs=end_epoch, validation_data=(x, [y, z]), shuffle=shuffle, callbacks=[tbCallBack])
 
             with open(epochpickle_path, 'wb+') as handle:
