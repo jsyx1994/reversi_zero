@@ -12,8 +12,8 @@ eval_rounds = 200
 eval_timelimit = 0.3
 # selfplay
 self_pool = 2
-selfplay_monitor = 0
-selfplay_timelimit = 4
+selfplay_monitor = 1
+selfplay_timelimit = .1
 
 # opt
 batch_size = 128
